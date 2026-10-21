@@ -1,0 +1,20 @@
+<header class="topbar">
+  <div class="brand">TASOLLER<b>+</b><span>Toolkit</span></div>
+  <nav class="tabs" aria-label="Pages">
+    <button class="tab" data-page="test">Input test</button>
+    <button class="tab" data-page="led">LED test</button>
+    <button class="tab" data-page="config">Config</button>
+    <button class="tab" data-page="flasher">Flasher</button>
+  </nav>
+  <div class="conn">
+    <button type="button" id="connInfo" class="conninfo" aria-haspopup="true" aria-expanded="false" disabled>
+      <span id="connDot" class="dot"></span>
+      <span id="connOfficial" class="official" hidden><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l6 2v4.5c0 3.4-2.5 6.1-6 7.5-3.5-1.4-6-4.1-6-7.5V3l6-2zm-1.2 9.6l4-4.2-1-1-3 3.1-1.3-1.3-1 1 2.3 2.4z"/></svg>Official firmware</span>
+      <span id="connText" class="conn-text">Not connected</span>
+    </button>
+    <div id="connPop" class="pop" role="dialog" aria-label="Device details" hidden></div>
+    <button id="btnConnect" class="btn">Connect</button>
+    <button id="btnDisconnect" class="btn plain" hidden>Disconnect</button>
+  </div>
+</header>
+

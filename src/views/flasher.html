@@ -1,0 +1,28 @@
+<!-- ============================ FLASHER ============================ -->
+<section id="page-flasher" class="page" aria-label="Flasher">
+ <div class="flash-wrap">
+  <p class="muted">A browser version of the firmware update function of the official <i>TASOLLER Options</i> tool (V2.8).</p>
+
+  <h2>1. Connection</h2>
+  <p class="muted" id="connHelp">Use <b>Connect</b> in the top bar (close the official tool first: only one program can use the device). The Flasher uses the update channel, which also exists in the normal mode of the device.</p>
+  <div class="box status">
+    <span>Device: <b id="stDev" class="muted">not connected</b></span>
+    <span>Firmware version: <b id="stVer" class="muted">-</b></span>
+    <span>Self-test: <b id="stSelf" class="muted">...</b></span>
+  </div>
+  <p id="hint" class="muted"></p>
+
+  <h2>2. Firmware package</h2>
+  <div class="frow"><input type="file" id="file" accept=".skystar"></div>
+  <div id="pkgBox"><p class="muted">No package loaded.</p></div>
+
+  <h2>3. Flash</h2>
+  <div class="frow">
+    <button id="btnFlash" class="btn danger" disabled>Flash the firmware</button>
+    <label><input type="checkbox" id="confirm"> I understand that this writes new firmware to my Tasoller, and I will not unplug it until it has restarted.</label>
+  </div>
+  <progress id="bar" max="100" value="0"></progress>
+  <p id="progressText" class="muted">&nbsp;</p>
+ </div>
+</section>
+

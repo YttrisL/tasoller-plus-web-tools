@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasoller Plus Toolkit</title>
+<style>
+  /* @include styles/base.css */
+  /* @include styles/topbar.css */
+  /* @include styles/controls.css */
+  /* @include styles/input-test.css */
+  /* @include styles/config.css */
+  /* @include styles/led-test.css */
+  /* @include styles/flasher.css */
+  /* @include styles/log.css */
+  /* @include styles/toasts.css */
+</style>
+</head>
+<body class="test-off">
+
+<!-- @include views/topbar.html -->
+<!-- @include views/banners.html -->
+<main>
+
+<!-- @include views/input-test.html -->
+<!-- @include views/led-test.html -->
+<!-- @include views/config.html -->
+<!-- @include views/flasher.html -->
+<!-- @include views/log.html -->
+</main>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script id="core">
+// @include js/core/constants.js
+// @include data/known-hashes.js
+// @include js/core/aes.js
+// @include js/core/frames.js
+// @include js/core/link.js
+// @include js/core/device.js
+// @include js/core/live-decoder.js
+// @include js/core/keys.js
+// @include js/core/package.js
+// @include js/core/led-packet.js
+// @include js/core/simulator.js
+// @include js/core/self-test.js
+</script>
+
+<script id="app">
+// @include js/app/state.js
+// @include js/app/logging.js
+// @include js/app/helpers.js
+// @include js/app/pages.js
+// @include js/app/connection.js
+// @include js/app/connection-ui.js
+// @include js/app/config.js
+// @include js/app/input-test.js
+// @include js/app/advanced.js
+// @include js/app/key-mapping.js
+// @include js/app/debug-panel.js
+// @include js/app/led-test.js
+// @include js/app/flasher.js
+// @include js/app/main.js
+</script>
+</body>
+</html>

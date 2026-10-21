@@ -1,0 +1,50 @@
+  /* ---- config page ---- */
+  .cfg-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:18px; max-width:1100px; }
+  @media (max-width:900px) { .cfg-grid { grid-template-columns:1fr; } }
+  fieldset.card { margin:0; padding:14px 16px 16px; border:1px solid var(--line); border-radius:3px; min-width:0; }
+  fieldset.card legend { padding:0 6px; color:var(--muted); font-size:13px; }
+  .card-body { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:16px 22px; }
+  @media (max-width:560px) { .card-body { grid-template-columns:1fr; } }
+  .field { margin-bottom:14px; }
+  .field > label, .field .lab { display:block; margin-bottom:6px; }
+  .row { display:flex; align-items:center; gap:12px; }
+  .num { width:46px; text-align:center; background:var(--input); border:1px solid var(--line2); border-radius:3px; padding:3px 2px; }
+  .val-out { min-width:34px; font-variant-numeric:tabular-nums; }
+  .tips { color:var(--muted); font-size:13px; }
+  .tips b { color:var(--fg); }
+  .btn-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.8fr); gap:10px; margin-top:22px; }
+  .btn-grid .col { display:flex; flex-direction:column; gap:10px; }
+  input[type=range] { -webkit-appearance:none; appearance:none; flex:1; min-width:0; height:22px; background:transparent; margin:0; --p:0%; cursor:pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height:6px; border-radius:3px; background:linear-gradient(to right, var(--accent) var(--p), var(--track) var(--p)); }
+  input[type=range]::-moz-range-track { height:6px; border-radius:3px; background:var(--track); }
+  input[type=range]::-moz-range-progress { height:6px; border-radius:3px; background:var(--accent); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:22px; margin-top:-8px; border-radius:2px; background:#f1f1f1; border:1px solid #777; }
+  input[type=range]::-moz-range-thumb { width:11px; height:20px; border-radius:2px; background:#f1f1f1; border:1px solid #777; }
+  input[type=range]:disabled { opacity:.4; cursor:default; }
+  .modecard { margin-top:18px; max-width:1100px; }
+  .ticks { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin:2px 4px 14px; }
+  .adv { margin-top:18px; max-width:1100px; border:1px solid var(--line); border-radius:3px; padding:14px 16px; }
+  .adv h3 { margin:0 0 4px; font-size:15px; }
+  .adv-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:8px; }
+  .adv-body { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:18px; }
+  @media (max-width:800px) { .adv-body { grid-template-columns:1fr; } }
+  .thr-row { margin-bottom:10px; }
+  .thr-row .desc { font-size:12px; color:var(--muted); margin:0 0 2px; }
+  .pads { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; align-items:end; height:130px; margin-bottom:8px; }
+  .pad { background:var(--panel2); border:1px solid var(--line); border-radius:3px; position:relative; height:100%; overflow:hidden; }
+  .pad > div { position:absolute; left:0; right:0; bottom:0; background:var(--accent); height:0; }
+  .pad > span { position:absolute; left:0; right:0; top:2px; text-align:center; font-size:11px; }
+  .adv-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .keycard, .debugcard { margin-top:18px; max-width:1100px; }
+  .keyrow { margin-bottom:12px; }
+  .keyrow-title { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
+  .keybtns { display:flex; flex-wrap:wrap; gap:6px; }
+  .keybtn { display:flex; flex-direction:column; align-items:center; min-width:62px; padding:5px 8px; background:var(--panel2); border:1px solid var(--line2); border-radius:5px; cursor:pointer; }
+  .keybtn:hover:not(:disabled) { border-color:var(--muted); }
+  .keybtn.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+  .keybtn:disabled { opacity:.45; cursor:default; }
+  .keybtn .kb-label { font-size:11px; color:var(--muted); }
+  .keybtn .kb-key { font-weight:700; }
+  .debugbar { margin-top:18px; }
+  .num.wide { width:70px; }
+

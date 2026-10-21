@@ -1,0 +1,20 @@
+  :root {
+    --bg:#101114; --bar:#15171b; --panel:#161b24; --panel2:#1c2330; --line:#2d2f34; --line2:#3a3d44;
+    --fg:#e8eaed; --muted:#9aa0a8; --accent:#55afff; --amber:#ffbf00;
+    --btn:#35648f; --btn-h:#3f75a8; --danger:#a24b4b; --danger-h:#b65c5c;
+    --ok:#3fb950; --warn:#d29922; --bad:#f85149; --cell-line:#333; --input:#1b2230; --track:#2f3238;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg:#f3f4f6; --bar:#ffffff; --panel:#ffffff; --panel2:#eef1f5; --line:#d4d7dd; --line2:#bfc4cc;
+      --fg:#1c1f24; --muted:#5d6570; --accent:#1a73c8; --amber:#c98400;
+      --btn:#2f6fa8; --btn-h:#3b82c2; --danger:#b04545; --danger-h:#c25555;
+      --ok:#1a7f37; --warn:#9a6700; --bad:#cf222e; --cell-line:#c9cdd4; --input:#f3f6fa; --track:#cfd4dc;
+    }
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; }
+  body { font:14px/1.45 system-ui, "Segoe UI", sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; }
+  button, input, select { font:inherit; color:inherit; }
+  [hidden] { display:none !important; }
+

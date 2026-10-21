@@ -1,0 +1,29 @@
+  /* ---- top bar ---- */
+  .topbar { position:sticky; top:0; z-index:20; display:flex; flex-wrap:wrap; align-items:center; gap:8px 20px;
+            padding:8px 16px; background:var(--bar); border-bottom:1px solid var(--line); }
+  .brand { font-weight:700; letter-spacing:.06em; font-size:15px; white-space:nowrap; }
+  .brand b { color:var(--accent); }
+  .brand span { font-weight:400; color:var(--muted); letter-spacing:0; margin-left:6px; }
+  .tabs { display:flex; gap:2px; }
+  .tab { background:none; border:0; border-bottom:2px solid transparent; padding:10px 16px; cursor:pointer; color:var(--muted); font-weight:600; }
+  .tab:hover { color:var(--fg); }
+  .tab[aria-current="page"] { color:var(--fg); border-bottom-color:var(--accent); }
+  .conn { margin-left:auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); flex:none; }
+  .official { display:inline-flex; align-items:center; gap:5px; color:var(--ok); font-weight:600; white-space:nowrap; }
+  .official svg { width:17px; height:17px; }
+  .dot.on { background:var(--ok); } .dot.warn { background:var(--warn); } .dot.demo { background:var(--accent); }
+  .conn { position:relative; }
+  .conninfo { display:inline-flex; align-items:center; gap:8px; background:var(--panel2); border:1px solid var(--line2); padding:5px 12px; border-radius:6px; cursor:pointer; }
+  .conninfo:hover:not(:disabled) { background:var(--line); border-color:var(--muted); }
+  .conninfo[aria-expanded="true"] { border-color:var(--accent); }
+  .conninfo:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .conninfo:disabled { cursor:default; background:none; border-color:transparent; }
+  .pop { position:absolute; top:calc(100% + 8px); left:0; z-index:30; min-width:270px; background:var(--panel2); border:1px solid var(--line2); border-radius:6px; box-shadow:0 6px 24px rgba(0,0,0,.4); padding:10px 14px; display:flex; flex-direction:column; gap:4px; }
+  .pop[hidden] { display:none; }
+  .pop .pop-mode { font-weight:700; color:var(--accent); padding-bottom:6px; margin-bottom:2px; border-bottom:1px solid var(--line); }
+  .pop .pop-row { padding:6px 0 2px; }
+  .pop .pop-label { font-weight:700; color:var(--muted); }
+  .pop .pop-value { margin:3px 0 0 6px; font-size:12.5px; }
+  .conn-text { color:var(--fg); font-weight:600; }
+

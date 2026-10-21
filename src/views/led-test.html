@@ -1,0 +1,44 @@
+<!-- ============================ LED TEST ============================ -->
+<section id="page-led" class="page" aria-label="LED test">
+  <div class="banner warn" id="ledUpdateNote" hidden>The device is in update mode: it only offers the Flasher. Restart it normally to change settings.</div>
+  <div class="banner" id="ledNote">The color is sent to the LEDs over the device's USB interface 0 (WebUSB), the one the game uses. Close the game first. WINUSB mode only. The LEDs only light when the device's second USB port is also connected.</div>
+  <div class="led-layout">
+    <div class="led-device" id="ledDevice">
+      <div class="led-tower" id="ledTowerL"><span class="led-label">Left tower</span></div>
+      <div class="led-center">
+        <div class="led-strip" id="ledStrip" aria-label="Slider LEDs"></div>
+        <span class="led-label">Slider: 16 pads and 15 dividers</span>
+      </div>
+      <div class="led-tower" id="ledTowerR"><span class="led-label">Right tower</span></div>
+    </div>
+    <div class="led-controls">
+      <div class="led-select">
+        <button class="btn plain" id="ledSelAll" type="button">Select all</button>
+        <button class="btn plain" id="ledSelNone" type="button">Select none</button>
+      </div>
+      <p class="led-count" id="ledCount">Click a zone to select it, click it again to deselect it. Several zones can be selected at once.</p>
+      <div class="field">
+        <span class="lab">Color of the selected zones</span>
+        <div class="row">
+          <input type="range" id="ledHue" min="0" max="360" step="1" value="200" aria-label="Hue">
+          <span class="led-swatch" id="ledSwatch"></span>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Brightness</span>
+        <div class="row">
+          <input type="range" id="ledBright" min="0" max="100" step="1" value="100" aria-label="Brightness">
+          <span class="val-out" id="ledBrightVal">100</span>
+        </div>
+      </div>
+      <div class="field"><span class="lab">Value</span> <code id="ledHex">#000000</code></div>
+      <div class="row">
+        <button class="btn" id="ledConnect">Connect LED output</button>
+        <button class="btn" id="ledApply" hidden>Show on device</button>
+        <button class="btn plain" id="ledOff" title="Turn every zone off">All off</button>
+      </div>
+      <p class="tips" id="ledStatus">LED output: not connected</p>
+    </div>
+  </div>
+</section>
+

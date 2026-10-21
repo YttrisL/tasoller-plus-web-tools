@@ -1,0 +1,23 @@
+  /* ---- LED test ---- */
+  .led-layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:24px; align-items:start; max-width:1400px; margin-top:12px; }
+  @media (max-width:1000px) { .led-layout { grid-template-columns:1fr; } }
+  .led-device { display:grid; grid-template-columns:90px minmax(0,1fr) 90px; gap:18px; align-items:end; padding:20px; background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+  .led-tower { height:400px; position:relative; border:2px solid var(--line2); border-radius:8px; background:var(--bg); display:flex; flex-direction:column; justify-content:space-evenly; align-items:center; padding:10px 0 28px; }
+  /* one tower = 24 LEDs in 3 groups of 8; the firmware gives each group a single color */
+  .led-group { display:flex; flex-direction:column; gap:4px; padding:5px 8px; border-radius:6px; }
+  .led-group b { display:block; width:30px; height:9px; border-radius:5px; background:var(--led, #222); box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
+  .led-zone { cursor:pointer; outline:2px solid transparent; outline-offset:2px; }
+  .led-zone:hover { outline-color:var(--line2); }
+  .led-zone.sel { outline-color:var(--accent); }
+  .led-select { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .led-count { color:var(--muted); font-size:13px; margin:-6px 0 14px; }
+  .led-label { position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:11px; color:var(--muted); }
+  .led-center { position:relative; padding-bottom:28px; }
+  .led-strip { display:flex; align-items:stretch; height:150px; border:2px solid var(--line2); border-radius:6px; padding:6px; background:var(--bg); gap:2px; }
+  .led-strip .pad, .led-strip .div { background:var(--led, #222); border-radius:2px; box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
+  .led-strip .pad { flex:4; } .led-strip .div { flex:1; }
+  .led-swatch { width:44px; height:28px; border-radius:4px; border:1px solid var(--line2); background:var(--led-pick, #000); }
+  #ledHue { --p:0%; }
+  #ledHue::-webkit-slider-runnable-track { background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+  #ledHue::-moz-range-track { background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+  .led-controls .row { margin-bottom:10px; }

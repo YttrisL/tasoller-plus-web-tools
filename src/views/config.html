@@ -1,0 +1,176 @@
+<!-- ============================ CONFIG ============================ -->
+<section id="page-config" class="page" aria-label="Config">
+  <div id="cfgNotice" class="banner warn" hidden></div>
+  <div class="cfg-grid">
+    <fieldset class="card">
+      <legend>Settings for the sensors thresholds:</legend>
+      <div class="card-body">
+        <div>
+          <div class="field">
+            <span class="lab">All thresholds:</span>
+            <div class="row">
+              <input type="range" id="sliderAll" min="20" max="130" step="1" value="85">
+              <input type="number" class="num" id="numAll" min="20" max="130" value="85" aria-label="All thresholds value">
+            </div>
+          </div>
+          <div class="field">
+            <span class="lab">BR:</span>
+            <div class="row">
+              <input type="range" id="sliderBR" min="7" max="25" step="1" value="22">
+              <span class="val-out" id="valBR">22</span>
+            </div>
+          </div>
+          <div class="btn-grid">
+            <div class="col">
+              <button class="btn" id="btnHideDiff">Hide DIFF</button>
+              <button class="btn" id="btnHideThr">Hide thresholds</button>
+            </div>
+            <div class="col">
+              <button class="btn" id="btnAdvanced">Advanced: set single Sensor thresholds</button>
+              <button class="btn danger" id="btnRestore"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 1h4l.5 1H14v1.5H2V2h3.5L6 1zM3 5h10l-.8 9.2a1 1 0 0 1-1 .8H4.8a1 1 0 0 1-1-.8L3 5zm3 2v6h1V7H6zm3 0v6h1V7H9z"/></svg>Restore factory global thresholds</button>
+            </div>
+          </div>
+        </div>
+        <div class="tips">
+          <div><b>Tips:</b></div>
+          <p>Regular users do not need the advanced settings.</p>
+          <p><b>All thresholds</b> sets the same value for the 4 threshold types of every sensor that still follows the global value. Sensors you customised keep their own values.</p>
+          <p>Changes are written to the device when you release the slider.</p>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="card">
+      <legend>Other:</legend>
+      <div class="card-body">
+        <div>
+          <div class="field">
+            <span class="lab">Ground Slider delay</span>
+            <div class="row">
+              <input type="range" id="sliderDelay" min="0" max="50" step="1" value="0">
+              <input type="number" class="num" id="numDelay" min="0" max="50" value="0" aria-label="Ground slider delay value">
+            </div>
+          </div>
+          <div class="field">
+            <span class="lab">Ground Slider brightness</span>
+            <div class="row">
+              <input type="range" id="sliderGround" min="1" max="100" step="1" value="100">
+              <span class="val-out" id="valGround">100</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lab">AIR brightness</span>
+            <div class="row">
+              <input type="range" id="sliderAir" min="1" max="100" step="1" value="100">
+              <span class="val-out" id="valAir">100</span>
+            </div>
+          </div>
+        </div>
+        <div class="tips">
+          <div><b>Tips:</b></div>
+          <p><b>Ground Slider delay</b>: delays the ground slider data sent to the game.</p>
+          <p><b>Brightness</b>: 100 is the factory value.</p>
+          <p>Values are stored in the device and kept after power off.</p>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
+  <fieldset class="card modecard">
+    <legend>USB mode:</legend>
+    <div class="card-body">
+      <div>
+        <div class="field">
+          <span class="lab">Mode: <b id="modeName">-</b> <span class="muted" id="modeCur"></span></span>
+          <div class="row"><input type="range" id="sliderMode" min="0" max="4" step="1" value="0"></div>
+          <div class="ticks"><span>WINUSB</span><span>4K</span><span>8K</span><span>16K</span><span>32K</span></div>
+        </div>
+        <button class="btn" id="btnMode" disabled>Switch mode</button>
+      </div>
+      <div class="tips">
+        <div><b>Tips:</b></div>
+        <p><b>WINUSB</b> is the mode for the game (chuniio / segatools). The 4K, 8K, 16K and 32K modes make the ground slider type keyboard keys instead.</p>
+        <p>Switching restarts the USB connection: the device disappears and comes back with another USB ID. Press <b>Connect</b> again if the page does not reconnect by itself.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="card keycard" id="keyCard" hidden>
+    <legend>Keyboard mapping:</legend>
+    <div class="card-body">
+      <div>
+        <p class="lab">Keys of the <b id="keyMode">-</b></p>
+        <div id="keyRows"></div>
+        <div class="row">
+          <button class="btn plain" id="keyClear" type="button" disabled>Clear the key</button>
+          <button class="btn danger" id="keyRestore" type="button">Restore the keys to factory</button>
+        </div>
+        <p class="tips" id="keyHint">Select a key, an air line or FN, then press the key to assign to it.</p>
+      </div>
+      <div class="tips">
+        <div><b>Tips:</b></div>
+        <p>The keys are stored per keyboard mode. This list is the one of the mode the device is in now.</p>
+        <p>Click a zone, an air line or FN, then press the keyboard key to assign to it. Click it again when you are done. <b>NULL</b> means no key.</p>
+        <p>Changes are written to the device at once.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="debugbar"><button class="btn ghost" id="btnDebug" type="button" aria-expanded="false">Show touch tuning (debug)</button></div>
+  <fieldset class="card debugcard" id="debugCard" hidden>
+    <legend>Touch tuning (debug):</legend>
+    <div class="card-body">
+      <div>
+        <div class="field">
+          <span class="lab">Finger capacitance (100 to 999, 330 is 3.3 pF)</span>
+          <div class="row">
+            <input type="number" class="num wide" id="dbgFinger" min="100" max="999" value="330" aria-label="Finger capacitance">
+            <button class="btn" id="dbgFingerApply" type="button">Apply</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="lab">Reset BaseLine</span>
+          <div class="row"><input type="range" id="dbgBaseline" min="1" max="255" step="1" value="1"><span class="val-out" id="dbgBaselineVal">-</span></div>
+        </div>
+        <div class="field">
+          <span class="lab">Noise threshold</span>
+          <div class="row"><input type="range" id="dbgNoise" min="1" max="255" step="1" value="1"><span class="val-out" id="dbgNoiseVal">-</span></div>
+        </div>
+        <div class="field">
+          <span class="lab">IIR filter (Raw_IIR / baseline_IIR)</span>
+          <div class="row"><input type="range" id="dbgIir" min="1" max="100" step="1" value="1"><span class="val-out" id="dbgIirVal">-</span></div>
+        </div>
+        <button class="btn plain" id="dbgReset" type="button">Reset the baseline now</button>
+      </div>
+      <div class="tips">
+        <div><b>Tips:</b></div>
+        <p>These are the hidden debug settings of the official tool. Change them only if you know what you are doing.</p>
+        <p>Each change is written to the device, which then restarts the touch controllers and recalibrates their baseline.</p>
+        <p>The sliders are the touch tuning values 0, 1 and 3 (the <b>BR</b> slider above is value 2). The names follow the layout of the official tool's panel.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="adv" id="advPanel" hidden>
+    <div class="adv-head">
+      <h3 id="advTitle">Sensor thresholds</h3>
+      <button class="btn plain" id="advPrev" title="Previous sensor">&lt;</button>
+      <button class="btn plain" id="advNext" title="Next sensor">&gt;</button>
+      <label class="muted">Sensor <input type="number" class="num" id="advNum" min="0" max="31" value="0" style="width:56px"></label>
+      <button class="btn ghost" id="advClose" style="margin-left:auto">Close</button>
+    </div>
+    <p class="tips" style="margin:0 0 10px">A sensor is made of 4 pads. The sensor triggers when any rule below is satisfied. Recommended range 20-130, and 4-1 &gt;= 4-2 &gt;= 4-3 &gt;= 4-4. Sensor numbers follow the Test page (0 is the top left cell, 1 the bottom left one).</p>
+    <div class="adv-body">
+      <div id="advRows"></div>
+      <div>
+        <div class="pads" id="advPads"></div>
+        <div class="row"><span>Sensor value: <b id="advVal">-</b></span><span>DIFF: <b id="advDiff">-</b></span></div>
+        <div class="adv-actions">
+          <button class="btn plain" id="advResetOne">Reset this sensor to global</button>
+          <button class="btn plain" id="advResetAll">Reset all sensors to global</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

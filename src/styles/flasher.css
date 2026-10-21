@@ -1,0 +1,12 @@
+  /* ---- flasher page ---- */
+  .flash-wrap { max-width:860px; }
+  .flash-wrap h2 { font-size:1.05em; margin:22px 0 8px; }
+  .box { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
+  .frow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0; }
+  .status span { display:inline-block; margin-right:16px; }
+  progress { width:100%; height:16px; }
+  table.kv { border-collapse:collapse; width:100%; font-size:.92em; }
+  table.kv th, table.kv td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.kv td.mono { word-break:break-all; }
+  pre.log { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px; overflow:auto; max-height:260px; font-size:12px; margin:6px 0; }
+  ul { margin:6px 0; padding-left:22px; }
