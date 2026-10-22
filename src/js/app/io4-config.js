@@ -65,6 +65,7 @@ function io4cfgRender() {
   io4fnRender();
   const c = app.conn, ok = io4cfgAvailable();
   $("io4cfgOff").hidden = ok || !isCfw();
+  $("btnToIo4").disabled = !!(app.busy || app.flashing || (app.conn && app.conn.update));
   $("io4cfgBox").hidden = !ok; $("segatoolsBox").hidden = !ok;
   if (!ok) { io4cfg.conn = null; return; }
   if (io4cfg.conn !== c) {                       // a new connection: start from what the device says
@@ -135,5 +136,20 @@ async function io4cfgApply() {
 
 $("io4LedMode").addEventListener("change", () => { io4cfg.pendingStatic = !$("io4LedMode").checked; io4cfgRender(); });         // checked: LED driver emulation
 $("io4Hue").addEventListener("input", io4cfgColor); $("io4Sat").addEventListener("input", io4cfgColor); $("io4Bright").addEventListener("input", io4cfgColor);
+// The mode of the device is not IO4-Emulation: switch to it from here, as the Config tab does.
+async function io4cfgSwitchMode() {
+  if (!isCfw() || isIo4()) return;
+  if (!confirm("Switch to the IO4-Emulation mode?" + NL + NL + "The device restarts its USB connection and comes back with another USB ID.")) return;
+  await runOp("Switching the mode", async c => {
+    await c.api.setMode(5);
+    const back = await c.api.getMode();
+    if (back !== 5) throw new Error("the device reports mode " + back);
+    if (c.demo) { await c.api.restartUsb(); c.mode = back; setConnUI("on"); await refreshConfig(); toast("Mode switched (simulated)", "ok"); return; }
+    app.switching = true; app.switchPid = MODE_USB[5];
+    toast("Mode saved. Restarting USB...", "ok");
+    await c.api.restartUsb();
+  });
+}
+$("btnToIo4").onclick = io4cfgSwitchMode;
 $("btnIo4Led").onclick = io4cfgApply;
 $("btnCopyIni").onclick = io4cfgCopyIni;

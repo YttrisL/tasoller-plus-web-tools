@@ -3,7 +3,10 @@
  <div class="io4cfg-layout">
   <div class="flash-wrap">
     <p class="muted"><b class="cfw-note">Available with the Supernova custom firmware only.</b></p>
-    <p class="muted" id="io4cfgOff" hidden>These settings are for the IO4-Emulation mode. Switch to it in the Config tab.</p>
+    <div id="io4cfgOff" hidden>
+      <p class="muted">These settings are for the IO4-Emulation mode. Switch to it in the Config tab.</p>
+      <button class="btn" id="btnToIo4">Switch to IO4 emulation mode now</button>
+    </div>
     <fieldset class="card cfw-card" id="io4fnBox" hidden>
       <legend>Function buttons:</legend>
       <p class="muted" id="io4fnOld" hidden>This firmware does not have this setting yet: flash the latest Supernova to use it.</p>
