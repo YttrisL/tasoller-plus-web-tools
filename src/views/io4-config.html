@@ -1,7 +1,91 @@
 <!-- ============================ IO4 MODE CONFIG ============================ -->
 <section id="page-io4cfg" class="page" aria-label="IO4 mode config">
+ <div class="io4cfg-layout">
   <div class="flash-wrap">
     <p class="muted"><b class="cfw-note">Available with the Supernova custom firmware only.</b></p>
-    <p class="cfw-soon">Coming soon</p>
+    <p class="muted" id="io4cfgOff" hidden>These settings are for the IO4-Emulation mode. Switch to it in the Config tab.</p>
+    <fieldset class="card cfw-card" id="io4fnBox" hidden>
+      <legend>Function buttons:</legend>
+      <p class="muted" id="io4fnOld" hidden>This firmware does not have this setting yet: flash the latest Supernova to use it.</p>
+      <div class="io4cfg-body">
+        <div class="io4cfg-controls">
+          <div class="field"><span class="lab" id="io4Fn1Lab">Button 1 (FN1)</span><details class="multi" id="io4Fn1"><summary aria-labelledby="io4Fn1Lab"></summary><div class="multi-list"></div></details></div>
+          <div class="field"><span class="lab" id="io4Fn2Lab">Button 2 (FN2)</span><details class="multi" id="io4Fn2"><summary aria-labelledby="io4Fn2Lab"></summary><div class="multi-list"></div></details></div>
+          <div class="field"><span class="lab" id="io4FnBothLab">Both buttons together</span><details class="multi" id="io4FnBoth"><summary aria-labelledby="io4FnBothLab"></summary><div class="multi-list"></div></details></div>
+          <button class="btn" id="btnIo4Fn" disabled>Apply</button>
+        </div>
+        <div class="tips io4cfg-tips">
+          <p>Each function button of the device sends the signals you pick to the game, one or several. By default button 1 sends <b>TEST</b> and button 2 sends <b>SERVICE</b>.</p>
+          <p>With signals for both buttons together, pressing the two at once sends only those, and not the ones of each button. Leave it on Nothing to send both.</p>
+          <p class="io4fn-warn"><b>Warning:</b> if you enter the input test of the game's Test Menu, you need access to both TEST and SERVICE to exit it.</p>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset class="card cfw-card" id="io4cfgBox">
+      <legend>Air towers:</legend>
+      <div class="io4cfg-body">
+       <div class="io4cfg-controls">
+        <div class="field">
+          <span class="lab">LED mode: <b id="io4LedName" class="cfw-note">-</b> <span class="muted" id="io4LedCur"></span></span>
+          <div class="io4-toggle">
+            <span id="io4LblStatic">Static light</span>
+            <label class="switch"><input type="checkbox" id="io4LedMode" aria-label="LED driver emulation instead of the static light"><span class="knob"></span></label>
+            <span id="io4LblEmu">LED driver emulation</span>
+          </div>
+        </div>
+        <div id="io4StaticBox" hidden>
+          <div class="field">
+            <span class="lab">Color of the air towers</span>
+            <div class="row">
+              <input type="range" id="io4Hue" min="0" max="360" step="1" value="200" aria-label="Hue">
+              <span class="led-swatch" id="io4Swatch"></span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lab">Saturation</span>
+            <div class="row">
+              <input type="range" id="io4Sat" min="0" max="100" step="1" value="0" aria-label="Saturation">
+              <span class="val-out" id="io4SatVal">0</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lab">Brightness</span>
+            <div class="row">
+              <input type="range" id="io4Bright" min="0" max="100" step="1" value="100" aria-label="Brightness">
+              <span class="val-out" id="io4BrightVal">100</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn" id="btnIo4Led" disabled>Apply</button>
+       </div>
+        <div class="tips io4cfg-tips">
+          <p><b>Static light</b> gives the device no LED boards, so there are no more COM ports to set up. The air towers show the color you pick.</p>
+          <p><b>LED driver emulation</b> is how the arcade hardware works: the game lights the air towers through the two LED boards of the device, which need two more COM ports to be set up.</p>
+          <p><b>Why static mode ?</b> The game sends a static white 99% of the time, only switching to red at the end of the credit. Using static color allows a very similar behavior without enforcing the need to configure two additional COM ports. If you want a behavior as close to the arcade as possible, select "LED driver emulation" and configure the two new COM ports in the device manager.</p>
+        </div>
+      </div>
+    </fieldset>
   </div>
+  <aside class="segatools-box" id="segatoolsBox" hidden>
+    <fieldset class="card cfw-card">
+      <legend>Your segatools.ini configuration:</legend>
+      <p class="muted">Replace these blocks in your <code>segatools.ini</code>. Make sure there is no other <code>[io4]</code>, <code>[slider]</code> or <code>[led15093]</code> block anywhere else in the file: a second copy can override these settings.</p>
+      <pre class="ini" id="segatoolsIni"></pre>
+      <p class="muted" id="segatoolsWhy"></p>
+      <div id="segatoolsPorts" hidden>
+        <p class="muted">The game finds the device on COM ports, which have to be given the numbers it expects. They depend on the <code>dipsw3</code> value of the <code>[system]</code> block of your <code>segatools.ini</code>:</p>
+        <table class="ports">
+          <thead><tr><th><code>dipsw3</code></th><th>Slider</th><th>Left LED board</th><th>Right LED board</th></tr></thead>
+          <tbody>
+            <tr><td><code>1</code> (CVT, the default)</td><td><code>COM1</code></td><td><code>COM2</code></td><td><code>COM3</code></td></tr>
+            <tr><td><code>0</code> (SP)</td><td><code>COM1</code></td><td><code>COM20</code></td><td><code>COM21</code></td></tr>
+          </tbody>
+        </table>
+        <p class="muted">To change the number of a port, open it in the device manager (it is listed as <code>USB Serial Device</code>), then <i>Port Settings</i>, <i>Advanced</i>, <i>COM Port Number</i>.</p>
+        <p class="muted"><b>Hint:</b> the three ports have the same name in the device manager. To tell them apart, open the properties of a port, go to the <i>Details</i> tab and pick the property <i>Bus reported device description</i>: it shows the name the device gave that port, <code>Supernova Slider</code>, <code>Supernova Side LED L</code> or <code>Supernova Side LED R</code>.</p>
+      </div>
+      <button class="btn plain" id="btnCopyIni" type="button">Copy</button>
+    </fieldset>
+  </aside>
+ </div>
 </section>

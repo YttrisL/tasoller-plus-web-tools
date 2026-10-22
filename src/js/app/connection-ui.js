@@ -58,6 +58,7 @@ function updateButtons() {
   disableMissing();
   updateDump();
   updateLedExt();
+  io4cfgRender();
   renderFnLabels();
   document.querySelectorAll("#advPanel input, #advPanel button").forEach(el => { if (el.id !== "advClose") el.disabled = !cfgOn; });
   const notice = $("cfgNotice");

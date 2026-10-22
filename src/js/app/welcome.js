@@ -6,13 +6,15 @@
 let gateWas = null;
 
 const WINUSB_PID = 0x1231;
-// The LED output of the other modes needs the device in WINUSB mode, which WebUSB has to be allowed to open.
-const usbLedWanted = c => !!(c && !c.demo && !c.update && !isIo4() && c.pid === WINUSB_PID && navigator.usb);
+// The LED output needs WebUSB to be allowed to open the device: in WINUSB mode, and in the IO4-Emulation mode with the static light (the LED
+// packets then go to a WinUSB interface of the device).
+const usbLedWanted = c => !!(c && !c.demo && !c.update && navigator.usb && (isIo4() ? !!(c.io4Led && c.io4Led.static) : c.pid === WINUSB_PID));
+const usbLedTarget = c => isIo4() ? { vendorId: IO4_VID, productId: IO4_PID } : { vendorId: VID, productId: WINUSB_PID };
 
 function gateNeeded() {
   const c = app.conn;
   if (!c) return true;
-  if (isIo4()) return !(c.serialPort && c.io4Hid);
+  if (isIo4()) return !(c.serialPort && c.io4Hid) || (usbLedWanted(c) && !c.usbLed);
   return usbLedWanted(c) && !c.usbLed;
 }
 
@@ -25,18 +27,21 @@ function updateGate() {
   $("welcomeConnect").disabled = !hid();
   if (c && on) {
     $("welcomeSetup").classList.toggle("io4", io4);
-    $("setupUsb").hidden = io4; $("setupSerial").hidden = !io4; $("setupHid").hidden = !io4;
+    $("setupUsb").hidden = !usbLedWanted(c); $("setupSerial").hidden = !io4; $("setupHid").hidden = !io4;
+    $("setupUsbState").textContent = c.usbLed ? "Allowed" : "Not allowed";
+    $("setupUsbState").className = "setup-state " + (c.usbLed ? "ok" : "warn");
+    $("setupUsbBtn").hidden = !!c.usbLed;
     if (io4) {
       $("setupTitle").innerHTML = "<span class='cfw-note'>IO4-Emulation mode</span>";
       $("setupIntro").innerHTML = "The device behaves like the arcade hardware.<br>The Toolkit needs your permission for each part of it: the browser asks for them one at a time.<br>Close the game first, it uses the same ports.";
       const serialOk = !!c.serialPort, n = c.serialCount || 0, hidOk = !!c.io4Hid;
       $("setupSerialText").innerHTML = serialAvailable()
-        ? "The slider and the two LED boards each have one.<br>They are listed under the same name: allow all three, in any order."
+        ? (io4Static() ? "The slider has one." : "The slider and the two LED boards each have one.<br>They are listed under the same name: allow all three, in any order.")
         : "Web Serial is not available in this browser: use Chrome or Edge on desktop.";
-      $("setupSerialState").textContent = serialOk ? "Allowed" : n + " of " + IO4_SERIAL_PORTS;
+      $("setupSerialState").textContent = serialOk ? "Allowed" : n + " of " + io4SerialPorts();
       $("setupSerialState").className = "setup-state " + (serialOk ? "ok" : "warn");
       $("setupSerialBtn").hidden = serialOk || !serialAvailable();
-      if (!serialOk && c.serialError && n >= IO4_SERIAL_PORTS) $("setupSerialText").innerHTML += "<br>" + esc(c.serialError);
+      if (!serialOk && c.serialError && n >= io4SerialPorts()) $("setupSerialText").innerHTML += "<br>" + esc(c.serialError);
       $("setupHidText").innerHTML = "The air beams and the TEST and SERVICE buttons.";
       $("setupHidState").textContent = hidOk ? "Allowed" : "Not allowed";
       $("setupHidState").className = "setup-state " + (hidOk ? "ok" : "warn");
@@ -44,9 +49,6 @@ function updateGate() {
     } else {
       $("setupTitle").textContent = "One more permission";
       $("setupIntro").innerHTML = "The Toolkit needs your permission to reach the device in WINUSB mode.";
-      $("setupUsbState").textContent = c.usbLed ? "Allowed" : "Not allowed";
-      $("setupUsbState").className = "setup-state " + (c.usbLed ? "ok" : "warn");
-      $("setupUsbBtn").hidden = !!c.usbLed;
     }
   }
   // ports that could not be opened (the game has them): look again by itself, so the page moves on when they are free
@@ -63,7 +65,7 @@ async function gateProbe() {
   app.gateProbing = true;
   try {
     if (usbLedWanted(c)) {
-      try { c.usbLed = (await navigator.usb.getDevices()).some(d => d.vendorId === VID && d.productId === WINUSB_PID); } catch (e) {}
+      try { const t = usbLedTarget(c); c.usbLed = (await navigator.usb.getDevices()).some(d => d.vendorId === t.vendorId && d.productId === t.productId); } catch (e) {}
     }
     if (isIo4()) {
       if (!c.serialPort && serialAvailable()) {
@@ -82,7 +84,7 @@ async function gateProbe() {
 
 async function allowUsbLed() {
   const c = app.conn; if (!c) return;
-  try { await navigator.usb.requestDevice({ filters: [{ vendorId: VID, productId: WINUSB_PID }] }); c.usbLed = true; }
+  try { await navigator.usb.requestDevice({ filters: [usbLedTarget(c)] }); c.usbLed = true; }
   catch (e) { if (e.name !== "NotFoundError") toast("Could not allow the LED output: " + e.message, "bad"); }
   updateGate();
 }

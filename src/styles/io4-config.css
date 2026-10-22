@@ -1,0 +1,33 @@
+  /* ---- IO4 mode config ---- */
+  #page-io4cfg .flash-wrap fieldset.card { max-width:1100px; }
+  /* The segatools.ini block floats at the right of a large screen (1080p), and goes under the settings on a smaller one. */
+  .segatools-box { margin-top:18px; max-width:860px; }
+  .segatools-box pre.ini { margin:8px 0; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:4px; font:13px/1.5 ui-monospace, Consolas, monospace; white-space:pre; overflow:auto; }
+  .segatools-box p { margin:6px 0; font-size:13px; }
+  table.ports { border-collapse:collapse; width:100%; margin:8px 0; font-size:13px; }
+  table.ports th, table.ports td { border:1px solid var(--line); padding:5px 8px; text-align:left; }
+  table.ports th { color:var(--muted); font-weight:600; }
+  @media (min-width:1500px) {
+    .io4cfg-layout { display:grid; grid-template-columns:minmax(0,860px) 380px; justify-content:space-between; gap:24px; align-items:start; }
+    .segatools-box { margin-top:0; position:sticky; top:16px; }
+  }
+  fieldset.card.cfw-card { border-color:var(--cfw); }
+  fieldset.card.cfw-card legend { color:var(--cfw); font-weight:600; }
+  details.multi { position:relative; max-width:340px; }
+  details.multi summary { list-style:none; cursor:pointer; padding:5px 28px 5px 9px; background:var(--input); border:1px solid var(--line2); border-radius:4px; position:relative; }
+  details.multi summary::-webkit-details-marker { display:none; }
+  details.multi summary::after { content:""; position:absolute; right:10px; top:50%; margin-top:-3px; border:5px solid transparent; border-top-color:var(--muted); }
+  details.multi[open] summary { border-color:var(--accent); }
+  .multi-list { position:absolute; z-index:5; left:0; right:0; margin-top:2px; max-height:300px; overflow:auto; background:var(--panel); border:1px solid var(--line2); border-radius:4px; padding:4px 0; box-shadow:0 4px 14px rgba(0,0,0,.35); }
+  .multi-list label { display:flex; align-items:center; gap:8px; padding:3px 10px; cursor:pointer; }
+  .multi-list label:hover { background:var(--panel2); }
+  .multi-list .multi-group { padding:6px 10px 2px; color:var(--cfw); font-size:12px; font-weight:600; }
+  .io4cfg-body { display:grid; grid-template-columns:minmax(0,340px) minmax(0,1fr); gap:16px 28px; }
+  @media (max-width:800px) { .io4cfg-body { grid-template-columns:1fr; } }
+  .io4-toggle { display:flex; align-items:center; gap:12px; }
+  .io4-toggle > span { color:var(--muted); }
+  .io4-toggle > span.on { color:var(--fg); font-weight:600; }
+  .io4cfg-tips { margin-top:0; }
+  .io4cfg-tips p:first-child { margin-top:0; }
+  #io4Hue::-webkit-slider-runnable-track { background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+  #io4Hue::-moz-range-track { background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }

@@ -12,6 +12,7 @@ function showPage(name) {
   if (name !== "led" && typeof ledDisconnect === "function" && led.dev && led.dev.io4) ledDisconnect();      // the Input test needs the slider port
   if (name === "config" && app.conn && !app.conn.update) refreshConfig();
   if (name === "dump") updateDump();
+  if (name === "io4cfg") io4cfgRender();
   if (name === "led") { if (led.dev) ledStart(); else ledAutoConnect(); }
 }
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => showPage(t.dataset.page));

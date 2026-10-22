@@ -5,6 +5,10 @@
 // With the Supernova firmware each tower LED can also be set on its own: zones 37..84, 37 + tower * 24 + LED counted from the bottom.
 const LED_ZONES = 37, LED_ALL_ZONES = LED_ZONES + 2 * LED_TOWER_LEDS;
 const led = { dev: null, timer: null, busy: false, rgb: [0, 0, 0], packets: 0, colors: Array.from({ length: LED_ALL_ZONES }, () => [0, 0, 0]), sel: new Set(), els: [], ind: false, last: null };
+// Where the LED packets go through WebUSB: the WINUSB mode has interface 0 and endpoint 3, the IO4-Emulation mode with the static light a WinUSB
+// interface 4 with endpoint 2 (and the USB ID of the I/O board).
+const ledUsbTarget = () => io4Static() ? { vendorId: IO4_VID, productId: IO4_PID, iface: 4, ep: 2 } : { vendorId: VID, productId: 0x1231, iface: 0, ep: LED_ENDPOINT };
+const ledSerialPath = () => isIo4() && !io4Static();            // the slider LEDs on the serial port, the towers on the command channel
 const ledVisible = z => z < 31 || (led.ind ? z >= LED_ZONES : z < LED_ZONES);
 const ledHsv = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return [f(5), f(3), f(1)].map(x => Math.round(x * 255)); };
 const ledHex = a => "#" + a.map(x => x.toString(16).padStart(2, "0")).join("");
@@ -129,9 +133,9 @@ async function updateLedExt() {
     if (app.conn !== c) return;
   }
   const ok = ledIndividualAvailable();
-  if (isIo4()) $("ledNote").innerHTML = ledNoteIo4; else $("ledNote").textContent = ledNoteUsb;
+  if (ledSerialPath()) $("ledNote").innerHTML = ledNoteIo4; else if (io4Static()) $("ledNote").innerHTML = ledNoteStatic; else $("ledNote").textContent = ledNoteUsb;
   $("ledNote").classList.toggle("cfw-banner", isIo4());
-  if (isIo4()) {
+  if (ledSerialPath()) {
     $("ledConnect").disabled = !serialAvailable() || !!(c && c.update);
     $("ledIndNote").innerHTML = "<b class='cfw-note'>IO4-Emulation mode:</b> The game sends three static color signals for each of the two air towers (SIDE DEVICE LED L and R), one for each group of eight LEDs.";
     if (led.ind) ledSetIndividual(false);
@@ -142,6 +146,7 @@ async function updateLedExt() {
  
 }
 const ledNoteUsb = $("ledNote").textContent;
+const ledNoteStatic = "<b class='cfw-note'>IO4-Emulation mode, static light:</b> the LEDs are sent over WebUSB, to an interface the game does not use. The air towers go back to the static light a moment after you leave this page. Close the game first.";
 const ledNoteIo4 = "<b class='cfw-note'>IO4-Emulation mode:</b> the slider LEDs are sent on the slider serial port (Web Serial) and the colors of the two air towers on the command channel. Close the game first.";
 
 // The output of the IO4-Emulation mode: it takes the official LED packet the page makes and sends the slider and the tower colors.
@@ -181,7 +186,7 @@ async function ledConnectIo4() {
 // The LED page opens the output of the IO4-Emulation mode by itself: the permissions were given on the welcome page.
 async function ledAutoConnect() {
   if (!app.conn || led.dev || led.connecting) return;
-  if (isIo4()) {
+  if (ledSerialPath()) {
     if (!app.conn.serialPort) return;
     led.connecting = true; led.failed = false; ledButtons(); ledStatus("LED output: connecting...");
     ledConnectIo4().finally(() => { led.connecting = false; ledButtons(); });
@@ -190,7 +195,7 @@ async function ledAutoConnect() {
   if (!navigator.usb) return;                                   // the device in WINUSB mode, allowed on an earlier visit: no click needed
   led.connecting = true;
   try {
-    const dev = (await navigator.usb.getDevices()).find(d => d.vendorId === VID && d.productId === 0x1231);
+    const target = ledUsbTarget(), dev = (await navigator.usb.getDevices()).find(d => d.vendorId === target.vendorId && d.productId === target.productId);
     led.granted = !!dev;
     if (dev && app.page === "led" && !led.dev) { ledStatus("LED output: connecting..."); ledButtons(); led.failed = false; await ledOpenUsb(dev); }
   } catch (e) { log("LED output: " + e.message); }
@@ -201,15 +206,16 @@ function ledOpened() { if (app.page === "led") ledStart(); else if (led.dev && l
 // Only what needs the user's attention is shown: the progress ("LED output: ready", "connecting"...) is not.
 function ledStatus(text, bad) { $("ledStatus").textContent = bad || !text.startsWith("LED output: ") ? text : ""; $("ledStatus").className = "tips" + (bad ? " bad" : ""); }
 function ledButtons() {
-  const auto = (isIo4() ? !!(app.conn && app.conn.serialPort) : led.granted) && !led.failed;      // it connects by itself when the permission is there
+  const auto = (ledSerialPath() ? !!(app.conn && app.conn.serialPort) : led.granted) && !led.failed;      // it connects by itself when the permission is there
   $("ledConnect").hidden = !!led.dev || auto;
   $("ledConnect").textContent = led.failed ? "Try again" : "Connect LED output";
 }
 async function ledConnect() {
-  if (isIo4()) return ledConnectIo4();
+  if (ledSerialPath()) return ledConnectIo4();
   if (!navigator.usb) { ledStatus("This browser has no WebUSB. Use Chrome or Edge.", true); return; }
   let dev;
-  try { dev = await navigator.usb.requestDevice({ filters: [{ vendorId: VID, productId: 0x1231 }] }); }
+  const target = ledUsbTarget();
+  try { dev = await navigator.usb.requestDevice({ filters: [{ vendorId: target.vendorId, productId: target.productId }] }); }
   catch (e) { ledStatus(e.name === "NotFoundError" ? "No device chosen. The LED output needs the device in WINUSB mode with the WinUSB driver." : "LED output: " + e.message, e.name !== "NotFoundError"); return; }
   await ledOpenUsb(dev);
 }
@@ -217,7 +223,7 @@ async function ledOpenUsb(dev) {
   try {
     await dev.open();
     if (dev.configuration === null) await dev.selectConfiguration(1);
-    await dev.claimInterface(0);
+    await dev.claimInterface(ledUsbTarget().iface);
   } catch (e) {
     try { await dev.close(); } catch (x) {}
     led.failed = true; ledButtons();
@@ -225,19 +231,19 @@ async function ledOpenUsb(dev) {
   }
   const itf = (dev.configuration ? dev.configuration.interfaces : []).map(i => "interface " + i.interfaceNumber + ": " + i.alternate.endpoints.map(e => "ep " + e.endpointNumber + " " + e.direction + " " + e.type).join(", ")).join(" | ");
   log("LED output: " + itf);
-  const ep = (dev.configuration ? dev.configuration.interfaces : []).filter(i => i.interfaceNumber === 0).flatMap(i => i.alternate.endpoints).find(e => e.endpointNumber === LED_ENDPOINT && e.direction === "out");
-  if (!ep) { try { await dev.releaseInterface(0); await dev.close(); } catch (x) {} led.failed = true; ledButtons(); ledStatus("The device has no LED endpoint (endpoint 3, OUT) on interface 0. Found: " + (itf || "nothing") + ". Is it in WINUSB mode?", true); return; }
-  led.dev = dev; led.granted = true; led.failed = false; log("LED output opened (WebUSB, interface 0)");
+  const target = ledUsbTarget(), ep = (dev.configuration ? dev.configuration.interfaces : []).filter(i => i.interfaceNumber === target.iface).flatMap(i => i.alternate.endpoints).find(e => e.endpointNumber === target.ep && e.direction === "out");
+  if (!ep) { try { await dev.releaseInterface(0); await dev.close(); } catch (x) {} led.failed = true; ledButtons(); ledStatus("The device has no LED endpoint (endpoint " + target.ep + ", OUT) on interface " + target.iface + ". Found: " + (itf || "nothing") + ". " + (io4Static() ? "Windows may still know the device with its old interfaces: remove it in Device Manager (tick the driver box) and plug it back." : "Is it in WINUSB mode?"), true); return; }
+  led.dev = dev; led.ep = target.ep; led.granted = true; led.failed = false; log("LED output opened (WebUSB, interface " + target.iface + ")");
   ledStatus("LED output: ready"); ledButtons(); ledOpened();
 }
 async function ledTick() {
   if (!led.dev || led.busy) return;
   led.busy = true;
   try {
-    const c = led.colors, r = await led.dev.transferOut(LED_ENDPOINT, buildLedPacket(c.slice(0, 31), c.slice(31, 34), c.slice(34, 37)));
+    const c = led.colors, r = await led.dev.transferOut(led.ep || LED_ENDPOINT, buildLedPacket(c.slice(0, 31), c.slice(31, 34), c.slice(34, 37)));
     if (r.status !== "ok") throw new Error("transfer status " + r.status);
     if (led.ind) for (const p of buildLedExtPackets(c.slice(LED_ZONES))) {      // Supernova: the towers LED by LED, after the official packet
-      const x = await led.dev.transferOut(LED_ENDPOINT, p);
+      const x = await led.dev.transferOut(led.ep || LED_ENDPOINT, p);
       if (x.status !== "ok") throw new Error("transfer status " + x.status);
     }
     led.packets++; if (led.packets === 1) log("LED output: first packet sent, " + r.bytesWritten + " bytes, status " + r.status + ", colors sent");

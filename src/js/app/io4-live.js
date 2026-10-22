@@ -31,9 +31,8 @@ async function io4IsSliderPort(port) {
   return found;
 }
 
-// The device has three serial ports (the slider and the two LED boards). The browser lists them all under the same name, so the user
-// is asked to allow all three, in any order, and the page then finds the slider among them by what it answers.
-const IO4_SERIAL_PORTS = 3;
+// The device has three serial ports (the slider and the two LED boards), or one with the static light. The browser lists them under the same name, so the user
+// is asked to allow them all, in any order, and the page then finds the slider among them by what it answers.
 
 async function io4GrantedPorts() {
   if (!serialAvailable()) return [];
@@ -57,9 +56,9 @@ async function io4EnsureSliderPort(ask) {
 }
 async function io4FindSliderPort() {
   const known = app.conn && app.conn.serialPort;
-  if (known) return { port: known, count: IO4_SERIAL_PORTS };                          // an earlier probe found it
+  if (known) return { port: known, count: io4SerialPorts() };                          // an earlier probe found it
   const granted = await io4GrantedPorts();
-  if (granted.length < IO4_SERIAL_PORTS) return { count: granted.length, error: granted.length + " of " + IO4_SERIAL_PORTS + " serial ports allowed: allow the next one." };
+  if (granted.length < io4SerialPorts()) return { count: granted.length, error: granted.length + " of " + io4SerialPorts() + " serial ports allowed: allow the next one." };
   let busy = false;
   for (let attempt = 0; attempt < 2; attempt++) {                                      // a port that is still closing is busy for a moment
     busy = false;
@@ -77,7 +76,7 @@ async function io4FindSliderPort() {
 async function io4AllowSerial() {
   const c = app.conn; if (!c) return;
   const r = await io4EnsureSliderPort(true);
-  if (r.port) c.serialPort = r.port; else if (r.error) toast(r.error, r.count < IO4_SERIAL_PORTS ? "ok" : "bad");
+  if (r.port) c.serialPort = r.port; else if (r.error) toast(r.error, r.count < io4SerialPorts() ? "ok" : "bad");
   c.serialCount = r.count; c.serialError = r.port ? "" : (r.error || "");
   updateStream(); updateGate();
 }
@@ -89,8 +88,11 @@ function io4HidReport(e) {
   const words = [d[28] | (d[29] << 8), d[30] | (d[31] << 8)];           // the report without its ID: buttons at 28 and 30
   let b = 0;
   for (let beam = 0; beam < 6; beam++) if (!(words[beam & 1] & (1 << (13 - (beam >> 1))))) b |= 1 << beam;   // the bit of a beam is set while it is free
-  if (words[0] & (1 << 9)) b |= 0x80;                                    // TEST (FN1)
-  if (words[0] & (1 << 6)) b |= 0x40;                                    // SERVICE (FN2)
+  const c = app.conn, fn = (c && c.io4Fn) || [[IO4_SIGNAL_TEST], [IO4_SIGNAL_SERVICE], []];
+  const sent = codes => codes.some(code => code < 32 && !IO4_AIR_BEAM_SIGNALS[code] && ((words[code >> 4] >> (code & 15)) & 1) === 1);      // an air beam shows with the beams
+  const both = sent(fn[2]);                                              // the signals of both buttons: they are both pressed
+  if (sent(fn[0]) || both) b |= 0x80;                                    // FN1
+  if (sent(fn[1]) || both) b |= 0x40;                                    // FN2
   app.live.buttons = b; app.live.rev++;
 }
 async function io4AllowHid() {
@@ -160,8 +162,9 @@ async function io4StopSerial() {
 // In the IO4-Emulation mode the two buttons are what the game sees: TEST (FN1) and SERVICE (FN2).
 function renderFnLabels() {
   document.body.classList.toggle("io4", isIo4());      // square, they stand for the features and not for the buttons
-  $("fnLabel1").textContent = isIo4() ? "TEST" : "fn1";
-  $("fnLabel2").textContent = isIo4() ? "SERVICE" : "fn2";
+  const fn = (app.conn && app.conn.io4Fn) || [[IO4_SIGNAL_TEST], [IO4_SIGNAL_SERVICE]];      // in this mode the buttons are named by the signals they send
+  $("fnLabel1").textContent = isIo4() ? io4SignalsText(fn[0]) : "fn1";
+  $("fnLabel2").textContent = isIo4() ? io4SignalsText(fn[1]) : "fn2";
 }
 
 // What updateStream shows in the IO4-Emulation mode; true when the data can be streamed.
@@ -173,7 +176,7 @@ async function io4UpdateStream(c, notice) {
   }
   if (!c.serialPort) { const r = await io4EnsureSliderPort(false); c.serialPort = r.port || null; c.serialCount = r.count || 0; }
   const parts = [];
-  if (!c.serialPort) parts.push('The pads are read on the slider serial port. The device has three serial ports, listed under the same name: allow all three, in any order, and keep accepting until the count says 3 of 3.<br><button class="btn" id="btnAllowSerial">Allow a serial port (' + (c.serialCount || 0) + ' of ' + IO4_SERIAL_PORTS + ' allowed)</button>');
+  if (!c.serialPort) parts.push('The pads are read on the slider serial port. ' + (io4Static() ? 'The device has one serial port.' : 'The device has three serial ports, listed under the same name: allow all three, in any order, and keep accepting until the count says 3 of 3.') + '<br><button class="btn" id="btnAllowSerial">Allow a serial port (' + (c.serialCount || 0) + ' of ' + io4SerialPorts() + ' allowed)</button>');
   if (!c.io4Hid) parts.push('The air beams and buttons are read from the I/O board. <button class="btn plain" id="btnAllowIo4">Allow the I/O board</button>');
   notice.hidden = !parts.length;
   if (parts.length) {

@@ -286,6 +286,39 @@
   .switch input:checked + .knob::after { transform:translateX(16px); }
   .switch input:focus-visible + .knob { outline:2px solid var(--accent); outline-offset:2px; }
   details.logbox summary { cursor:pointer; color:var(--muted); }
+  /* ---- IO4 mode config ---- */
+  #page-io4cfg .flash-wrap fieldset.card { max-width:1100px; }
+  /* The segatools.ini block floats at the right of a large screen (1080p), and goes under the settings on a smaller one. */
+  .segatools-box { margin-top:18px; max-width:860px; }
+  .segatools-box pre.ini { margin:8px 0; padding:10px 12px; background:var(--bg); border:1px solid var(--line); border-radius:4px; font:13px/1.5 ui-monospace, Consolas, monospace; white-space:pre; overflow:auto; }
+  .segatools-box p { margin:6px 0; font-size:13px; }
+  table.ports { border-collapse:collapse; width:100%; margin:8px 0; font-size:13px; }
+  table.ports th, table.ports td { border:1px solid var(--line); padding:5px 8px; text-align:left; }
+  table.ports th { color:var(--muted); font-weight:600; }
+  @media (min-width:1500px) {
+    .io4cfg-layout { display:grid; grid-template-columns:minmax(0,860px) 380px; justify-content:space-between; gap:24px; align-items:start; }
+    .segatools-box { margin-top:0; position:sticky; top:16px; }
+  }
+  fieldset.card.cfw-card { border-color:var(--cfw); }
+  fieldset.card.cfw-card legend { color:var(--cfw); font-weight:600; }
+  details.multi { position:relative; max-width:340px; }
+  details.multi summary { list-style:none; cursor:pointer; padding:5px 28px 5px 9px; background:var(--input); border:1px solid var(--line2); border-radius:4px; position:relative; }
+  details.multi summary::-webkit-details-marker { display:none; }
+  details.multi summary::after { content:""; position:absolute; right:10px; top:50%; margin-top:-3px; border:5px solid transparent; border-top-color:var(--muted); }
+  details.multi[open] summary { border-color:var(--accent); }
+  .multi-list { position:absolute; z-index:5; left:0; right:0; margin-top:2px; max-height:300px; overflow:auto; background:var(--panel); border:1px solid var(--line2); border-radius:4px; padding:4px 0; box-shadow:0 4px 14px rgba(0,0,0,.35); }
+  .multi-list label { display:flex; align-items:center; gap:8px; padding:3px 10px; cursor:pointer; }
+  .multi-list label:hover { background:var(--panel2); }
+  .multi-list .multi-group { padding:6px 10px 2px; color:var(--cfw); font-size:12px; font-weight:600; }
+  .io4cfg-body { display:grid; grid-template-columns:minmax(0,340px) minmax(0,1fr); gap:16px 28px; }
+  @media (max-width:800px) { .io4cfg-body { grid-template-columns:1fr; } }
+  .io4-toggle { display:flex; align-items:center; gap:12px; }
+  .io4-toggle > span { color:var(--muted); }
+  .io4-toggle > span.on { color:var(--fg); font-weight:600; }
+  .io4cfg-tips { margin-top:0; }
+  .io4cfg-tips p:first-child { margin-top:0; }
+  #io4Hue::-webkit-slider-runnable-track { background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
+  #io4Hue::-moz-range-track { background:linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); }
   /* The page shown while no device is connected, and while a Supernova device in the IO4-Emulation mode still needs permissions. */
   body.gate .tabs { display:none; }
   body.gate .page.active { display:none; }
@@ -713,10 +746,94 @@
 </section>
 <!-- ============================ IO4 MODE CONFIG ============================ -->
 <section id="page-io4cfg" class="page" aria-label="IO4 mode config">
+ <div class="io4cfg-layout">
   <div class="flash-wrap">
     <p class="muted"><b class="cfw-note">Available with the Supernova custom firmware only.</b></p>
-    <p class="cfw-soon">Coming soon</p>
+    <p class="muted" id="io4cfgOff" hidden>These settings are for the IO4-Emulation mode. Switch to it in the Config tab.</p>
+    <fieldset class="card cfw-card" id="io4fnBox" hidden>
+      <legend>Function buttons:</legend>
+      <p class="muted" id="io4fnOld" hidden>This firmware does not have this setting yet: flash the latest Supernova to use it.</p>
+      <div class="io4cfg-body">
+        <div class="io4cfg-controls">
+          <div class="field"><span class="lab" id="io4Fn1Lab">Button 1 (FN1)</span><details class="multi" id="io4Fn1"><summary aria-labelledby="io4Fn1Lab"></summary><div class="multi-list"></div></details></div>
+          <div class="field"><span class="lab" id="io4Fn2Lab">Button 2 (FN2)</span><details class="multi" id="io4Fn2"><summary aria-labelledby="io4Fn2Lab"></summary><div class="multi-list"></div></details></div>
+          <div class="field"><span class="lab" id="io4FnBothLab">Both buttons together</span><details class="multi" id="io4FnBoth"><summary aria-labelledby="io4FnBothLab"></summary><div class="multi-list"></div></details></div>
+          <button class="btn" id="btnIo4Fn" disabled>Apply</button>
+        </div>
+        <div class="tips io4cfg-tips">
+          <p>Each function button of the device sends the signals you pick to the game, one or several. By default button 1 sends <b>TEST</b> and button 2 sends <b>SERVICE</b>.</p>
+          <p>With signals for both buttons together, pressing the two at once sends only those, and not the ones of each button. Leave it on Nothing to send both.</p>
+          <p class="io4fn-warn"><b>Warning:</b> if you enter the input test of the game's Test Menu, you need access to both TEST and SERVICE to exit it.</p>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset class="card cfw-card" id="io4cfgBox">
+      <legend>Air towers:</legend>
+      <div class="io4cfg-body">
+       <div class="io4cfg-controls">
+        <div class="field">
+          <span class="lab">LED mode: <b id="io4LedName" class="cfw-note">-</b> <span class="muted" id="io4LedCur"></span></span>
+          <div class="io4-toggle">
+            <span id="io4LblStatic">Static light</span>
+            <label class="switch"><input type="checkbox" id="io4LedMode" aria-label="LED driver emulation instead of the static light"><span class="knob"></span></label>
+            <span id="io4LblEmu">LED driver emulation</span>
+          </div>
+        </div>
+        <div id="io4StaticBox" hidden>
+          <div class="field">
+            <span class="lab">Color of the air towers</span>
+            <div class="row">
+              <input type="range" id="io4Hue" min="0" max="360" step="1" value="200" aria-label="Hue">
+              <span class="led-swatch" id="io4Swatch"></span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lab">Saturation</span>
+            <div class="row">
+              <input type="range" id="io4Sat" min="0" max="100" step="1" value="0" aria-label="Saturation">
+              <span class="val-out" id="io4SatVal">0</span>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lab">Brightness</span>
+            <div class="row">
+              <input type="range" id="io4Bright" min="0" max="100" step="1" value="100" aria-label="Brightness">
+              <span class="val-out" id="io4BrightVal">100</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn" id="btnIo4Led" disabled>Apply</button>
+       </div>
+        <div class="tips io4cfg-tips">
+          <p><b>Static light</b> gives the device no LED boards, so there are no more COM ports to set up. The air towers show the color you pick.</p>
+          <p><b>LED driver emulation</b> is how the arcade hardware works: the game lights the air towers through the two LED boards of the device, which need two more COM ports to be set up.</p>
+          <p><b>Why static mode ?</b> The game sends a static white 99% of the time, only switching to red at the end of the credit. Using static color allows a very similar behavior without enforcing the need to configure two additional COM ports. If you want a behavior as close to the arcade as possible, select "LED driver emulation" and configure the two new COM ports in the device manager.</p>
+        </div>
+      </div>
+    </fieldset>
   </div>
+  <aside class="segatools-box" id="segatoolsBox" hidden>
+    <fieldset class="card cfw-card">
+      <legend>Your segatools.ini configuration:</legend>
+      <p class="muted">Replace these blocks in your <code>segatools.ini</code>. Make sure there is no other <code>[io4]</code>, <code>[slider]</code> or <code>[led15093]</code> block anywhere else in the file: a second copy can override these settings.</p>
+      <pre class="ini" id="segatoolsIni"></pre>
+      <p class="muted" id="segatoolsWhy"></p>
+      <div id="segatoolsPorts" hidden>
+        <p class="muted">The game finds the device on COM ports, which have to be given the numbers it expects. They depend on the <code>dipsw3</code> value of the <code>[system]</code> block of your <code>segatools.ini</code>:</p>
+        <table class="ports">
+          <thead><tr><th><code>dipsw3</code></th><th>Slider</th><th>Left LED board</th><th>Right LED board</th></tr></thead>
+          <tbody>
+            <tr><td><code>1</code> (CVT, the default)</td><td><code>COM1</code></td><td><code>COM2</code></td><td><code>COM3</code></td></tr>
+            <tr><td><code>0</code> (SP)</td><td><code>COM1</code></td><td><code>COM20</code></td><td><code>COM21</code></td></tr>
+          </tbody>
+        </table>
+        <p class="muted">To change the number of a port, open it in the device manager (it is listed as <code>USB Serial Device</code>), then <i>Port Settings</i>, <i>Advanced</i>, <i>COM Port Number</i>.</p>
+        <p class="muted"><b>Hint:</b> the three ports have the same name in the device manager. To tell them apart, open the properties of a port, go to the <i>Details</i> tab and pick the property <i>Bus reported device description</i>: it shows the name the device gave that port, <code>Supernova Slider</code>, <code>Supernova Side LED L</code> or <code>Supernova Side LED R</code>.</p>
+      </div>
+      <button class="btn plain" id="btnCopyIni" type="button">Copy</button>
+    </fieldset>
+  </aside>
+ </div>
 </section>
 <!-- ============================ USEFUL LINKS ============================ -->
 <section id="page-links" class="page" aria-label="Useful links">
@@ -760,7 +877,24 @@ const USAGE_PAGE_CMD = 0xFF00, USAGE_PAGE_STREAM = 0xFF11;
 const CMD = { HANDSHAKE: 1, VERSION: 2, UPDATE: 4, MODE: 0x27, SENSOR_THR: 0x29, SAVE: 0x2C, GLOBAL_THR: 0x2D, RESTORE: 0x2E,
               DELAY: 0x32, RESTART_USB: 0x2F, KEYMAP: 0x2A, TOUCH_INFO: 0x08, HW_MAIN: 0x25, HW_TOUCH: 0x26, RESET_BASELINE: 0x35, BRIGHTNESS: 0x36, TUNING: 0x37, FINGER_CAP: 0x09, FINGER_CAP_SET: 0x0A, ERROR: 5,
               SAVE_AND_RESET: 0x28,
-              DUMP: 0x40, SETTINGS: 0x41, LED: 0x42 /* Supernova only */ };
+              DUMP: 0x40, SETTINGS: 0x41, LED: 0x42, IO4_BUTTONS: 0x43 /* Supernova only */ };
+// The signals a function button can send to the game in the IO4-Emulation mode (io4.c of the firmware): every one of the 32 buttons of the I/O board,
+// by its bit (the first player in the low word, the second 16 higher), and 32 for the coin (each press adds a credit). The air beams are PUSH 3, 4 and 5
+// of both players; a function button that sends one interrupts that beam. A function button sends any number of them.
+const IO4_SIGNAL_COIN = 32, IO4_SIGNAL_TEST = 9, IO4_SIGNAL_SERVICE = 6;
+const IO4_AIR_BEAM_SIGNALS = { 13: 1, 29: 2, 12: 3, 28: 4, 11: 5, 27: 6 };      // the bit of each air beam, with its number (1 is the bottom one)
+const IO4_PUSH_NAMES = { 0: "START", 1: "RIGHT", 2: "LEFT", 3: "UP", 4: "DOWN", 5: "PUSH 1", 10: "PUSH 2", 11: "PUSH 3", 12: "PUSH 4", 13: "PUSH 5", 14: "PUSH 6", 15: "PUSH 7" };
+const IO4_SIGNALS = [[IO4_SIGNAL_TEST, "TEST"], [IO4_SIGNAL_SERVICE, "SERVICE"], [IO4_SIGNAL_COIN, "COIN"]];      // the first group of the lists
+const IO4_SIGNALS_UNUSED = [];                                                                                      // the others, in the group "Unused"
+for (let bit = 0; bit < 32; bit++) {
+  if (bit === IO4_SIGNAL_TEST || bit === IO4_SIGNAL_SERVICE) continue;
+  const player = bit < 16 ? "1P" : "2P", n = bit & 15, push = IO4_PUSH_NAMES[n];
+  const air = IO4_AIR_BEAM_SIGNALS[bit];
+  IO4_SIGNALS_UNUSED.push([bit, push ? player + " " + push + (air ? " (air beam " + air + ")" : "") : player + " bit " + n + " (not wired)"]);
+}
+const io4SignalName = code => { const s = IO4_SIGNALS.concat(IO4_SIGNALS_UNUSED).find(x => x[0] === code); return s ? s[1] : "-"; };
+// The signals of a button as a short text: its name, or the first one and how many more.
+const io4SignalsText = codes => codes.length === 0 ? "Nothing" : codes.length === 1 ? io4SignalName(codes[0]) : io4SignalName(codes[0]) + " + " + (codes.length - 1) + " more";
 const FINGER_CAP_MIN = 100, FINGER_CAP_MAX = 999;
 const TUNING_COUNT = 18, TUNING_BR_INDEX = 2;          // 18 u16 "tuning" block; the BR slider of the official tool is entry 2
 const THR_MIN = 20, THR_MAX = 130, BR_MIN = 7, BR_MAX = 25, DELAY_MAX = 50, BRIGHT_MIN = 1, BRIGHT_MAX = 100;
@@ -1068,6 +1202,30 @@ class TasollerDevice {
   // ---- individual tower LEDs (Supernova only, see led_ext.c of the firmware) ----
   // The three colors (9 bytes: red, green, blue each) of an air tower, 0 left and 1 right: the way the Toolkit lights them in the IO4-Emulation mode.
   async ledTowers(tower, colors) { await this.c(CMD.LED, [1, tower, ...colors], 2000, "set the tower colors"); }
+  // The LED mode of the IO4-Emulation mode (Supernova): the air towers show the LED boards of the game, or one static color. The mode is read by the
+  // device at its start, the color is shown at once; save writes both to the flash.
+  async io4LedConfig() { const p = need(await this.c(CMD.LED, [2], 2000, "IO4 LED mode"), 5, "IO4 LED mode"); return { static: p[1] === 1, rgb: [p[2], p[3], p[4]] }; }
+  async setIo4LedConfig(isStatic, rgb, save) { await this.c(CMD.LED, [3, isStatic ? 1 : 0, ...rgb, save ? 1 : 0], 5000, "set the IO4 LED mode"); }
+  // The signals of the two function buttons in the IO4-Emulation mode (Supernova): FN1, FN2 and both pressed together, a list of signal numbers each (see
+  // IO4_SIGNALS). The device keeps each as a mask of the 32 buttons of the board (4 bytes, little endian) and the coin (1 byte).
+  async io4Buttons() {
+    const p = need(await this.c(CMD.IO4_BUTTONS, [0], 2000, "function buttons"), 16, "function buttons"), out = [];
+    for (let w = 0; w < 3; w++) {
+      const codes = [], mask = (p[1 + 5 * w] | (p[2 + 5 * w] << 8) | (p[3 + 5 * w] << 16) | (p[4 + 5 * w] << 24)) >>> 0;
+      for (let bit = 0; bit < 32; bit++) if ((mask >>> bit) & 1) codes.push(bit);
+      if (p[5 + 5 * w] === 1) codes.push(IO4_SIGNAL_COIN);
+      out.push(codes);
+    }
+    return out;
+  }
+  async setIo4Buttons(lists, save) {
+    const bytes = [];
+    for (const codes of lists) {
+      let mask = 0; for (const c of codes) if (c < 32) mask = (mask | (1 << c)) >>> 0;
+      bytes.push(mask & 255, (mask >>> 8) & 255, (mask >>> 16) & 255, (mask >>> 24) & 255, codes.includes(IO4_SIGNAL_COIN) ? 1 : 0);
+    }
+    await this.c(CMD.IO4_BUTTONS, [1, ...bytes, save ? 1 : 0], 5000, "set the function buttons");
+  }
   async ledExtInfo() { const p = need(await this.c(CMD.LED, [0], 2000, "LED info"), 3, "LED info"); return { protocol: p[1], towerLeds: p[2] }; }
 
   // ---- settings backup (Supernova only, see settings_transfer.c of the firmware). Numbers are little endian. ----
@@ -1522,7 +1680,16 @@ class SimDevice {
       case CMD.LED:
         if (!this.version.startsWith(CFW_VERSION_PREFIX)) return reply(5, nonce, [1]);
         if (p[0] === 1 && p[1] <= 1 && p.length >= 11) { this.towers = this.towers || [[], []]; this.towers[p[1]] = Array.from(p.subarray(2, 11)); return reply(CMD.LED, nonce, [1]); }
+        if (p[0] === 2) { const c = this.io4Led || { static: true, rgb: [255, 255, 255] }; return reply(CMD.LED, nonce, [2, c.static ? 1 : 0, ...c.rgb]); }
+        if (p[0] === 3 && p.length >= 6) { this.io4Led = { static: p[1] === 1, rgb: Array.from(p.subarray(2, 5)) }; if (p[5]) this.saves++; return reply(CMD.LED, nonce, [3]); }
         return p[0] === 0 ? reply(CMD.LED, nonce, [0, LED_EXT_VERSION, LED_TOWER_LEDS]) : reply(5, nonce, [1]);
+      case CMD.IO4_BUTTONS: {
+        if (!this.version.startsWith(CFW_VERSION_PREFIX)) return reply(5, nonce, [1]);
+        const bytes = this.fn || [0x00, 0x02, 0, 0, 0, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0];      // FN1 is TEST (bit 9), FN2 is SERVICE (bit 6)
+        if (p[0] === 0) return reply(cmd, nonce, [0, ...bytes]);
+        if (p[0] === 1 && p.length >= 17 && p[5] <= 1 && p[10] <= 1 && p[15] <= 1) { this.fn = Array.from(p.subarray(1, 16)); if (p[16]) this.saves++; return reply(cmd, nonce, [1]); }
+        return reply(5, nonce, [1]);
+      }
       case CMD.SETTINGS: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.settingsCommand(p, nonce, reply) : reply(5, nonce, [1]);
       case CMD.SAVE_AND_RESET: this.resets = (this.resets || 0) + 1; return null;
       case CMD.DUMP: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.dump(p, nonce, reply) : reply(5, nonce, [1]);   // only the custom firmware has it
@@ -1744,6 +1911,17 @@ async function selfTest() {
   for (const p of ext) for (let i = 0; i < p[5]; i++) { const key = p[3] * 24 + p[4] + i; if (seen.has(key) || hex(p.subarray(6 + 3 * i, 9 + 3 * i)) !== hex(Uint8Array.from(towerColors[key]))) throw new Error("extended LED packet content failed"); seen.add(key); }
   if (seen.size !== 48) throw new Error("extended LED packets do not cover every LED");
   if ((await dev4.ledExtInfo()).towerLeds !== 24) throw new Error("LED info failed");
+  const fn0 = await dev4.io4Buttons();
+  if (fn0.length !== 3 || fn0[0].join() !== String(IO4_SIGNAL_TEST) || fn0[1].join() !== String(IO4_SIGNAL_SERVICE) || fn0[2].length) throw new Error("function buttons default failed");
+  await dev4.setIo4Buttons([[0, 11, 32], [29], [16, 31]], true);        // several signals, an air beam, the coin
+  const fn1 = await dev4.io4Buttons();
+  if (fn1[0].join() !== "0,11,32" || fn1[1].join() !== "29" || fn1[2].join() !== "16,31") throw new Error("function buttons round trip failed");
+  if (io4SignalsText([9]) !== "TEST" || io4SignalsText([]) !== "Nothing" || io4SignalsText([0, 11, 32]) !== "1P START + 2 more") throw new Error("function buttons text failed");
+  const led0 = await dev4.io4LedConfig();
+  if (!led0.static || led0.rgb.join() !== "255,255,255") throw new Error("IO4 LED mode default failed");
+  await dev4.setIo4LedConfig(true, [10, 20, 30], true);
+  const led1 = await dev4.io4LedConfig();
+  if (!led1.static || led1.rgb.join() !== "10,20,30") throw new Error("IO4 LED mode round trip failed");
   let noLedExt = false;
   try { await new TasollerDevice(mkLink(new SimDevice())).ledExtInfo(); } catch (e) { noLedExt = e instanceof FlashError; }
   if (!noLedExt) throw new Error("the stock firmware must not answer the LED command");
@@ -1775,6 +1953,10 @@ const app = {
 // conn.cfw is true when the device runs the Supernova custom firmware. Use isCfw() to test it; while the
 // device is connected the page also has the "cfw" class on <body>, so CSS can show CFW-only menus.
 const isIo4 = () => !!(app.conn && app.conn.cmdDev && app.conn.cmdDev.vendorId === IO4_VID);
+// IO4-Emulation with the static light of the air towers: the device has no LED boards (one serial port, the slider) and the LEDs of the setup
+// tool go through a WinUSB interface of the device. conn.io4Led is { static, rgb } as the device reported it when it was connected.
+const io4Static = () => !!(app.conn && isIo4() && app.conn.io4Led && app.conn.io4Led.static);
+const io4SerialPorts = () => io4Static() ? 1 : 3;
 const isCfw = () => !!(app.conn && app.conn.cfw);
 function detectCfw(version, productName, demo) {
   return !demo && (String(version || "").startsWith(CFW_VERSION_PREFIX) || String(productName || "").startsWith(CFW_NAME));
@@ -1811,6 +1993,7 @@ function showPage(name) {
   if (name !== "led" && typeof ledDisconnect === "function" && led.dev && led.dev.io4) ledDisconnect();      // the Input test needs the slider port
   if (name === "config" && app.conn && !app.conn.update) refreshConfig();
   if (name === "dump") updateDump();
+  if (name === "io4cfg") io4cfgRender();
   if (name === "led") { if (led.dev) ledStart(); else ledAutoConnect(); }
 }
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => showPage(t.dataset.page));
@@ -1952,6 +2135,14 @@ async function adoptInner(devs, demo) {
   log("handshake ok, version: " + version + (conn.cfw ? " (Supernova custom firmware)" : ""));
   if (cmdDev.vendorId === IO4_VID) conn.mode = 5;
   else if (conn.pid in PID_MODE) conn.mode = PID_MODE[conn.pid];
+  if (conn.cfw && cmdDev.vendorId === IO4_VID && !conn.update) {      // the LED mode decides which permissions the page needs
+    try { conn.io4Led = await conn.api.io4LedConfig(); log("IO4 LED mode: " + (conn.io4Led.static ? "static light " + ledHex(conn.io4Led.rgb) : "LED driver emulation")); }
+    catch (e) { conn.io4Led = { static: false, rgb: [255, 255, 255] }; log("IO4 LED mode not available: " + e.message); }
+  }
+  if (conn.cfw && cmdDev.vendorId === IO4_VID && !conn.update) {
+    try { conn.io4Fn = await conn.api.io4Buttons(); log("function buttons: " + conn.io4Fn.map(io4SignalsText).join(", ")); }
+    catch (e) { conn.io4Fn = null; log("function buttons not available: " + e.message); }
+  }
   setConnUI("on"); $("reconnectBar").hidden = true; app.wasFlashed = false;
   if ((app.installCfw || load("installCfw") === "1") && conn.cfw && !conn.update) {        // Supernova was just installed with the Flasher: IO4-Emulation is the mode it starts in, also when the device had been in another mode with an earlier Supernova
     app.installCfw = false; store("installCfw", "0");
@@ -2069,6 +2260,7 @@ function updateButtons() {
   disableMissing();
   updateDump();
   updateLedExt();
+  io4cfgRender();
   renderFnLabels();
   document.querySelectorAll("#advPanel input, #advPanel button").forEach(el => { if (el.id !== "advClose") el.disabled = !cfgOn; });
   const notice = $("cfgNotice");
@@ -2465,9 +2657,8 @@ async function io4IsSliderPort(port) {
   return found;
 }
 
-// The device has three serial ports (the slider and the two LED boards). The browser lists them all under the same name, so the user
-// is asked to allow all three, in any order, and the page then finds the slider among them by what it answers.
-const IO4_SERIAL_PORTS = 3;
+// The device has three serial ports (the slider and the two LED boards), or one with the static light. The browser lists them under the same name, so the user
+// is asked to allow them all, in any order, and the page then finds the slider among them by what it answers.
 
 async function io4GrantedPorts() {
   if (!serialAvailable()) return [];
@@ -2491,9 +2682,9 @@ async function io4EnsureSliderPort(ask) {
 }
 async function io4FindSliderPort() {
   const known = app.conn && app.conn.serialPort;
-  if (known) return { port: known, count: IO4_SERIAL_PORTS };                          // an earlier probe found it
+  if (known) return { port: known, count: io4SerialPorts() };                          // an earlier probe found it
   const granted = await io4GrantedPorts();
-  if (granted.length < IO4_SERIAL_PORTS) return { count: granted.length, error: granted.length + " of " + IO4_SERIAL_PORTS + " serial ports allowed: allow the next one." };
+  if (granted.length < io4SerialPorts()) return { count: granted.length, error: granted.length + " of " + io4SerialPorts() + " serial ports allowed: allow the next one." };
   let busy = false;
   for (let attempt = 0; attempt < 2; attempt++) {                                      // a port that is still closing is busy for a moment
     busy = false;
@@ -2511,7 +2702,7 @@ async function io4FindSliderPort() {
 async function io4AllowSerial() {
   const c = app.conn; if (!c) return;
   const r = await io4EnsureSliderPort(true);
-  if (r.port) c.serialPort = r.port; else if (r.error) toast(r.error, r.count < IO4_SERIAL_PORTS ? "ok" : "bad");
+  if (r.port) c.serialPort = r.port; else if (r.error) toast(r.error, r.count < io4SerialPorts() ? "ok" : "bad");
   c.serialCount = r.count; c.serialError = r.port ? "" : (r.error || "");
   updateStream(); updateGate();
 }
@@ -2523,8 +2714,11 @@ function io4HidReport(e) {
   const words = [d[28] | (d[29] << 8), d[30] | (d[31] << 8)];           // the report without its ID: buttons at 28 and 30
   let b = 0;
   for (let beam = 0; beam < 6; beam++) if (!(words[beam & 1] & (1 << (13 - (beam >> 1))))) b |= 1 << beam;   // the bit of a beam is set while it is free
-  if (words[0] & (1 << 9)) b |= 0x80;                                    // TEST (FN1)
-  if (words[0] & (1 << 6)) b |= 0x40;                                    // SERVICE (FN2)
+  const c = app.conn, fn = (c && c.io4Fn) || [[IO4_SIGNAL_TEST], [IO4_SIGNAL_SERVICE], []];
+  const sent = codes => codes.some(code => code < 32 && !IO4_AIR_BEAM_SIGNALS[code] && ((words[code >> 4] >> (code & 15)) & 1) === 1);      // an air beam shows with the beams
+  const both = sent(fn[2]);                                              // the signals of both buttons: they are both pressed
+  if (sent(fn[0]) || both) b |= 0x80;                                    // FN1
+  if (sent(fn[1]) || both) b |= 0x40;                                    // FN2
   app.live.buttons = b; app.live.rev++;
 }
 async function io4AllowHid() {
@@ -2594,8 +2788,9 @@ async function io4StopSerial() {
 // In the IO4-Emulation mode the two buttons are what the game sees: TEST (FN1) and SERVICE (FN2).
 function renderFnLabels() {
   document.body.classList.toggle("io4", isIo4());      // square, they stand for the features and not for the buttons
-  $("fnLabel1").textContent = isIo4() ? "TEST" : "fn1";
-  $("fnLabel2").textContent = isIo4() ? "SERVICE" : "fn2";
+  const fn = (app.conn && app.conn.io4Fn) || [[IO4_SIGNAL_TEST], [IO4_SIGNAL_SERVICE]];      // in this mode the buttons are named by the signals they send
+  $("fnLabel1").textContent = isIo4() ? io4SignalsText(fn[0]) : "fn1";
+  $("fnLabel2").textContent = isIo4() ? io4SignalsText(fn[1]) : "fn2";
 }
 
 // What updateStream shows in the IO4-Emulation mode; true when the data can be streamed.
@@ -2607,7 +2802,7 @@ async function io4UpdateStream(c, notice) {
   }
   if (!c.serialPort) { const r = await io4EnsureSliderPort(false); c.serialPort = r.port || null; c.serialCount = r.count || 0; }
   const parts = [];
-  if (!c.serialPort) parts.push('The pads are read on the slider serial port. The device has three serial ports, listed under the same name: allow all three, in any order, and keep accepting until the count says 3 of 3.<br><button class="btn" id="btnAllowSerial">Allow a serial port (' + (c.serialCount || 0) + ' of ' + IO4_SERIAL_PORTS + ' allowed)</button>');
+  if (!c.serialPort) parts.push('The pads are read on the slider serial port. ' + (io4Static() ? 'The device has one serial port.' : 'The device has three serial ports, listed under the same name: allow all three, in any order, and keep accepting until the count says 3 of 3.') + '<br><button class="btn" id="btnAllowSerial">Allow a serial port (' + (c.serialCount || 0) + ' of ' + io4SerialPorts() + ' allowed)</button>');
   if (!c.io4Hid) parts.push('The air beams and buttons are read from the I/O board. <button class="btn plain" id="btnAllowIo4">Allow the I/O board</button>');
   notice.hidden = !parts.length;
   if (parts.length) {
@@ -2831,6 +3026,10 @@ $("btnDebug").onclick = () => { debugOpen = !debugOpen; renderDebug(); };
 // With the Supernova firmware each tower LED can also be set on its own: zones 37..84, 37 + tower * 24 + LED counted from the bottom.
 const LED_ZONES = 37, LED_ALL_ZONES = LED_ZONES + 2 * LED_TOWER_LEDS;
 const led = { dev: null, timer: null, busy: false, rgb: [0, 0, 0], packets: 0, colors: Array.from({ length: LED_ALL_ZONES }, () => [0, 0, 0]), sel: new Set(), els: [], ind: false, last: null };
+// Where the LED packets go through WebUSB: the WINUSB mode has interface 0 and endpoint 3, the IO4-Emulation mode with the static light a WinUSB
+// interface 4 with endpoint 2 (and the USB ID of the I/O board).
+const ledUsbTarget = () => io4Static() ? { vendorId: IO4_VID, productId: IO4_PID, iface: 4, ep: 2 } : { vendorId: VID, productId: 0x1231, iface: 0, ep: LED_ENDPOINT };
+const ledSerialPath = () => isIo4() && !io4Static();            // the slider LEDs on the serial port, the towers on the command channel
 const ledVisible = z => z < 31 || (led.ind ? z >= LED_ZONES : z < LED_ZONES);
 const ledHsv = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return [f(5), f(3), f(1)].map(x => Math.round(x * 255)); };
 const ledHex = a => "#" + a.map(x => x.toString(16).padStart(2, "0")).join("");
@@ -2955,9 +3154,9 @@ async function updateLedExt() {
     if (app.conn !== c) return;
   }
   const ok = ledIndividualAvailable();
-  if (isIo4()) $("ledNote").innerHTML = ledNoteIo4; else $("ledNote").textContent = ledNoteUsb;
+  if (ledSerialPath()) $("ledNote").innerHTML = ledNoteIo4; else if (io4Static()) $("ledNote").innerHTML = ledNoteStatic; else $("ledNote").textContent = ledNoteUsb;
   $("ledNote").classList.toggle("cfw-banner", isIo4());
-  if (isIo4()) {
+  if (ledSerialPath()) {
     $("ledConnect").disabled = !serialAvailable() || !!(c && c.update);
     $("ledIndNote").innerHTML = "<b class='cfw-note'>IO4-Emulation mode:</b> The game sends three static color signals for each of the two air towers (SIDE DEVICE LED L and R), one for each group of eight LEDs.";
     if (led.ind) ledSetIndividual(false);
@@ -2968,6 +3167,7 @@ async function updateLedExt() {
  
 }
 const ledNoteUsb = $("ledNote").textContent;
+const ledNoteStatic = "<b class='cfw-note'>IO4-Emulation mode, static light:</b> the LEDs are sent over WebUSB, to an interface the game does not use. The air towers go back to the static light a moment after you leave this page. Close the game first.";
 const ledNoteIo4 = "<b class='cfw-note'>IO4-Emulation mode:</b> the slider LEDs are sent on the slider serial port (Web Serial) and the colors of the two air towers on the command channel. Close the game first.";
 
 // The output of the IO4-Emulation mode: it takes the official LED packet the page makes and sends the slider and the tower colors.
@@ -3007,7 +3207,7 @@ async function ledConnectIo4() {
 // The LED page opens the output of the IO4-Emulation mode by itself: the permissions were given on the welcome page.
 async function ledAutoConnect() {
   if (!app.conn || led.dev || led.connecting) return;
-  if (isIo4()) {
+  if (ledSerialPath()) {
     if (!app.conn.serialPort) return;
     led.connecting = true; led.failed = false; ledButtons(); ledStatus("LED output: connecting...");
     ledConnectIo4().finally(() => { led.connecting = false; ledButtons(); });
@@ -3016,7 +3216,7 @@ async function ledAutoConnect() {
   if (!navigator.usb) return;                                   // the device in WINUSB mode, allowed on an earlier visit: no click needed
   led.connecting = true;
   try {
-    const dev = (await navigator.usb.getDevices()).find(d => d.vendorId === VID && d.productId === 0x1231);
+    const target = ledUsbTarget(), dev = (await navigator.usb.getDevices()).find(d => d.vendorId === target.vendorId && d.productId === target.productId);
     led.granted = !!dev;
     if (dev && app.page === "led" && !led.dev) { ledStatus("LED output: connecting..."); ledButtons(); led.failed = false; await ledOpenUsb(dev); }
   } catch (e) { log("LED output: " + e.message); }
@@ -3027,15 +3227,16 @@ function ledOpened() { if (app.page === "led") ledStart(); else if (led.dev && l
 // Only what needs the user's attention is shown: the progress ("LED output: ready", "connecting"...) is not.
 function ledStatus(text, bad) { $("ledStatus").textContent = bad || !text.startsWith("LED output: ") ? text : ""; $("ledStatus").className = "tips" + (bad ? " bad" : ""); }
 function ledButtons() {
-  const auto = (isIo4() ? !!(app.conn && app.conn.serialPort) : led.granted) && !led.failed;      // it connects by itself when the permission is there
+  const auto = (ledSerialPath() ? !!(app.conn && app.conn.serialPort) : led.granted) && !led.failed;      // it connects by itself when the permission is there
   $("ledConnect").hidden = !!led.dev || auto;
   $("ledConnect").textContent = led.failed ? "Try again" : "Connect LED output";
 }
 async function ledConnect() {
-  if (isIo4()) return ledConnectIo4();
+  if (ledSerialPath()) return ledConnectIo4();
   if (!navigator.usb) { ledStatus("This browser has no WebUSB. Use Chrome or Edge.", true); return; }
   let dev;
-  try { dev = await navigator.usb.requestDevice({ filters: [{ vendorId: VID, productId: 0x1231 }] }); }
+  const target = ledUsbTarget();
+  try { dev = await navigator.usb.requestDevice({ filters: [{ vendorId: target.vendorId, productId: target.productId }] }); }
   catch (e) { ledStatus(e.name === "NotFoundError" ? "No device chosen. The LED output needs the device in WINUSB mode with the WinUSB driver." : "LED output: " + e.message, e.name !== "NotFoundError"); return; }
   await ledOpenUsb(dev);
 }
@@ -3043,7 +3244,7 @@ async function ledOpenUsb(dev) {
   try {
     await dev.open();
     if (dev.configuration === null) await dev.selectConfiguration(1);
-    await dev.claimInterface(0);
+    await dev.claimInterface(ledUsbTarget().iface);
   } catch (e) {
     try { await dev.close(); } catch (x) {}
     led.failed = true; ledButtons();
@@ -3051,19 +3252,19 @@ async function ledOpenUsb(dev) {
   }
   const itf = (dev.configuration ? dev.configuration.interfaces : []).map(i => "interface " + i.interfaceNumber + ": " + i.alternate.endpoints.map(e => "ep " + e.endpointNumber + " " + e.direction + " " + e.type).join(", ")).join(" | ");
   log("LED output: " + itf);
-  const ep = (dev.configuration ? dev.configuration.interfaces : []).filter(i => i.interfaceNumber === 0).flatMap(i => i.alternate.endpoints).find(e => e.endpointNumber === LED_ENDPOINT && e.direction === "out");
-  if (!ep) { try { await dev.releaseInterface(0); await dev.close(); } catch (x) {} led.failed = true; ledButtons(); ledStatus("The device has no LED endpoint (endpoint 3, OUT) on interface 0. Found: " + (itf || "nothing") + ". Is it in WINUSB mode?", true); return; }
-  led.dev = dev; led.granted = true; led.failed = false; log("LED output opened (WebUSB, interface 0)");
+  const target = ledUsbTarget(), ep = (dev.configuration ? dev.configuration.interfaces : []).filter(i => i.interfaceNumber === target.iface).flatMap(i => i.alternate.endpoints).find(e => e.endpointNumber === target.ep && e.direction === "out");
+  if (!ep) { try { await dev.releaseInterface(0); await dev.close(); } catch (x) {} led.failed = true; ledButtons(); ledStatus("The device has no LED endpoint (endpoint " + target.ep + ", OUT) on interface " + target.iface + ". Found: " + (itf || "nothing") + ". " + (io4Static() ? "Windows may still know the device with its old interfaces: remove it in Device Manager (tick the driver box) and plug it back." : "Is it in WINUSB mode?"), true); return; }
+  led.dev = dev; led.ep = target.ep; led.granted = true; led.failed = false; log("LED output opened (WebUSB, interface " + target.iface + ")");
   ledStatus("LED output: ready"); ledButtons(); ledOpened();
 }
 async function ledTick() {
   if (!led.dev || led.busy) return;
   led.busy = true;
   try {
-    const c = led.colors, r = await led.dev.transferOut(LED_ENDPOINT, buildLedPacket(c.slice(0, 31), c.slice(31, 34), c.slice(34, 37)));
+    const c = led.colors, r = await led.dev.transferOut(led.ep || LED_ENDPOINT, buildLedPacket(c.slice(0, 31), c.slice(31, 34), c.slice(34, 37)));
     if (r.status !== "ok") throw new Error("transfer status " + r.status);
     if (led.ind) for (const p of buildLedExtPackets(c.slice(LED_ZONES))) {      // Supernova: the towers LED by LED, after the official packet
-      const x = await led.dev.transferOut(LED_ENDPOINT, p);
+      const x = await led.dev.transferOut(led.ep || LED_ENDPOINT, p);
       if (x.status !== "ok") throw new Error("transfer status " + x.status);
     }
     led.packets++; if (led.packets === 1) log("LED output: first packet sent, " + r.bytesWritten + " bytes, status " + r.status + ", colors sent");
@@ -3081,6 +3282,145 @@ async function ledDisconnect() {
 $("ledConnect").onclick = ledConnect;
 if (navigator.usb) navigator.usb.addEventListener("disconnect", e => { if (led.dev && e.device === led.dev) { log("LED output: device disconnected"); led.dev = null; ledStop(); ledStatus("LED output: not connected"); ledButtons(); } });
 
+// ------------------------------------------------------------------------------------------------
+// IO4 mode config (Supernova): the LED mode of the IO4-Emulation mode. "LED driver emulation" is what the device does by default, the game
+// lights the air towers through two LED boards on two more COM ports. "Static light" removes the boards (and their COM ports) and lights the
+// air towers with one color kept by the device; the setup tool then lights the LEDs through a WinUSB interface of the device.
+// ------------------------------------------------------------------------------------------------
+const io4cfg = { conn: null, pendingStatic: false, rgb: [255, 255, 255], live: null };
+
+const io4cfgAvailable = () => !!(isCfw() && isIo4() && app.conn.io4Led && !app.conn.update);
+
+function io4cfgHsv(c) {                          // the pickers' hue, saturation and brightness that give the color c
+  const mx = Math.max(...c);
+  if (mx === 0) return { hue: Number($("io4Hue").value), sat: 0, bright: 0 };
+  const [r, g, b] = c.map(x => x / 255), top = mx / 255, d = top - Math.min(r, g, b);
+  let h = 0;
+  if (d > 0) { h = top === r ? ((g - b) / d) % 6 : top === g ? (b - r) / d + 2 : (r - g) / d + 4; h = Math.round(((h * 60) + 360) % 360); }
+  else h = Number($("io4Hue").value);               // a gray has no hue: keep the one the picker has
+  return { hue: h, sat: Math.round(d / top * 100), bright: Math.round(top * 100) };
+}
+
+// ---- The function buttons: each sends any number of signals of the I/O board
+const io4fn = { conn: null, sel: [[IO4_SIGNAL_TEST], [IO4_SIGNAL_SERVICE], []] };
+const io4fnIds = ["io4Fn1", "io4Fn2", "io4FnBoth"];
+for (const [i, id] of io4fnIds.entries()) {
+  const list = $(id).querySelector(".multi-list"), add = ([code, name]) => {
+    const label = document.createElement("label"), box = document.createElement("input"), text = document.createElement("span");
+    box.type = "checkbox"; box.value = code; text.textContent = name;
+    if (code === IO4_SIGNAL_COIN) label.title = "Adds one credit each time the button is pressed";
+    if (IO4_AIR_BEAM_SIGNALS[code]) label.title = "The button interrupts this air beam while it is pressed";
+    box.addEventListener("change", () => {
+      const set = new Set(io4fn.sel[i]); if (box.checked) set.add(code); else set.delete(code);
+      io4fn.sel[i] = [...set].sort((x, y) => x - y); io4fnRender();
+    });
+    label.appendChild(box); label.appendChild(text); list.appendChild(label);
+  };
+  IO4_SIGNALS.forEach(add);
+  const group = document.createElement("div"); group.className = "multi-group"; group.textContent = "Unused"; list.appendChild(group);
+  IO4_SIGNALS_UNUSED.forEach(add);
+}
+document.addEventListener("click", e => { for (const id of io4fnIds) if (!$(id).contains(e.target)) $(id).open = false; });      // a list closes when the click is elsewhere
+function io4fnRender() {
+  const c = app.conn, ok = io4cfgAvailable(), known = ok && !!c.io4Fn;
+  $("io4fnBox").hidden = !ok;
+  $("io4fnOld").hidden = !ok || known;                  // an older Supernova does not have the setting: the block stays, but cannot be used
+  if (!ok) { io4fn.conn = null; return; }
+  const saved = known ? c.io4Fn : [[IO4_SIGNAL_TEST], [IO4_SIGNAL_SERVICE], []];
+  if (io4fn.conn !== c) io4fn.conn = c, io4fn.sel = saved.map(l => l.slice());
+  const idle = !app.busy && !app.flashing && known;
+  io4fnIds.forEach((id, i) => {
+    $(id).querySelector("summary").textContent = io4SignalsText(io4fn.sel[i]);
+    for (const box of $(id).querySelectorAll("input")) { box.checked = io4fn.sel[i].includes(Number(box.value)); box.disabled = !idle; }
+  });
+  $("btnIo4Fn").disabled = !idle || JSON.stringify(io4fn.sel) === JSON.stringify(saved);
+}
+$("btnIo4Fn").onclick = async () => {
+  const lists = io4fn.sel.map(l => l.slice());
+  await runOp("Saving the function buttons", async c => {
+    await c.api.setIo4Buttons(lists, true);
+    c.io4Fn = lists;
+    toast("Function buttons saved", "ok");
+  });
+  renderFnLabels(); io4fnRender();
+};
+
+function io4cfgRender() {
+  io4fnRender();
+  const c = app.conn, ok = io4cfgAvailable();
+  $("io4cfgOff").hidden = ok || !isCfw();
+  $("io4cfgBox").hidden = !ok; $("segatoolsBox").hidden = !ok;
+  if (!ok) { io4cfg.conn = null; return; }
+  if (io4cfg.conn !== c) {                       // a new connection: start from what the device says
+    io4cfg.conn = c; io4cfg.pendingStatic = c.io4Led.static; io4cfg.rgb = c.io4Led.rgb.slice();
+    const hsv = io4cfgHsv(io4cfg.rgb);
+    $("io4Hue").value = hsv.hue; $("io4Sat").value = hsv.sat; $("io4Bright").value = hsv.bright; $("io4LedMode").checked = !io4cfg.pendingStatic;
+  }
+  const cur = c.io4Led.static, pending = io4cfg.pendingStatic, idle = !app.busy && !app.flashing;
+  const colorChanged = pending && cur && io4cfg.rgb.join() !== c.io4Led.rgb.join();          // the color is shown on the towers, Apply keeps it
+  $("io4LedName").textContent = pending ? "Static light" : "LED driver emulation";
+  $("io4LedCur").textContent = pending !== cur ? "(not applied)" : colorChanged ? "(color not saved)" : "(current)";
+  $("io4StaticBox").hidden = !pending;
+  $("io4LblStatic").classList.toggle("on", pending); $("io4LblEmu").classList.toggle("on", !pending);
+  $("io4LedMode").disabled = !idle; $("io4Hue").disabled = !idle; $("io4Sat").disabled = !idle; $("io4Bright").disabled = !idle;
+  $("btnIo4Led").disabled = !idle || (pending === cur && !colorChanged);
+  io4cfgIni(pending);
+  $("io4Swatch").style.setProperty("--led-pick", ledHex(io4cfg.rgb)); $("io4SatVal").textContent = $("io4Sat").value; $("io4BrightVal").textContent = $("io4Bright").value;
+}
+
+// The blocks of segatools.ini for the LED mode the switch shows. The device is the I/O board and the slider, so segatools emulates neither. The
+// LED boards are the device's too with the LED driver emulation; with the static light it has none, so segatools emulates them.
+function io4cfgIni(isStatic) {
+  $("segatoolsIni").textContent = ["[io4]", "enable=0", "", "[slider]", "enable=0", "", "[led15093]", "enable=" + (isStatic ? 1 : 0)].join("\n");
+  $("segatoolsWhy").textContent = isStatic
+    ? "The device has no LED boards in the static light: segatools emulates them, so [led15093] is enabled. The I/O board and the slider are the device's. The slider port has to be COM1."
+    : "The device is the I/O board, the slider and the two LED boards: segatools emulates none of them.";
+  $("segatoolsPorts").hidden = isStatic;                // the COM numbers matter when the device has the LED boards
+}
+async function io4cfgCopyIni() {
+  try { await navigator.clipboard.writeText($("segatoolsIni").textContent); toast("Copied", "ok"); }
+  catch (e) { toast("Could not copy: select the text and copy it", "bad"); }
+}
+
+function io4cfgColor() {
+  const c = app.conn; if (!io4cfgAvailable()) return;
+  io4cfg.rgb = ledHsv(Number($("io4Hue").value), Number($("io4Sat").value) / 100, Number($("io4Bright").value) / 100);
+  io4cfgRender();
+  if (!c.io4Led.static) return;                   // the device is not in the static light yet: the color goes with the switch
+  clearTimeout(io4cfg.live);
+  io4cfg.live = setTimeout(() => c.api.setIo4LedConfig(true, io4cfg.rgb, false).catch(e => log("static light: " + e.message)), 120);      // shown at once, kept with Apply
+}
+
+async function io4cfgApply() {
+  if (!io4cfgAvailable()) return;
+  const toStatic = io4cfg.pendingStatic, c0 = app.conn;
+  if (toStatic === c0.io4Led.static) {            // only the color: it is kept, the device does not restart
+    await runOp("Saving the color", async c => {
+      clearTimeout(io4cfg.live);
+      await c.api.setIo4LedConfig(true, io4cfg.rgb, true);
+      c.io4Led.rgb = io4cfg.rgb.slice();
+      toast("Color saved", "ok");
+    });
+    io4cfgRender();
+    return;
+  }
+  if (!confirm("Switch to " + (toStatic ? "the static light" : "the LED driver emulation") + "?" + NL + NL + (toStatic
+    ? "The device restarts without the two LED boards: their COM ports go away, and the air towers show the color you picked."
+    : "The device restarts with the two LED boards: two more COM ports appear, which the game needs to find on the right numbers."))) return;
+  clearTimeout(io4cfg.live);
+  const done = await runOp("Changing the LED mode", async c => {
+    await c.api.setIo4LedConfig(toStatic, io4cfg.rgb, true);
+    app.wasFlashed = !c.demo;                     // makes the page say that the device is restarting and offer Reconnect
+    toast("LED mode saved. The device is restarting.", "ok");
+    await c.api.saveAndReset();
+  });
+  if (done === false) app.wasFlashed = false;
+}
+
+$("io4LedMode").addEventListener("change", () => { io4cfg.pendingStatic = !$("io4LedMode").checked; io4cfgRender(); });         // checked: LED driver emulation
+$("io4Hue").addEventListener("input", io4cfgColor); $("io4Sat").addEventListener("input", io4cfgColor); $("io4Bright").addEventListener("input", io4cfgColor);
+$("btnIo4Led").onclick = io4cfgApply;
+$("btnCopyIni").onclick = io4cfgCopyIni;
 // ------------------------------------------------------------------------------------------------
 // Flasher page
 // ------------------------------------------------------------------------------------------------
@@ -3258,13 +3598,15 @@ $("setImportFile").onchange = importSettings;
 let gateWas = null;
 
 const WINUSB_PID = 0x1231;
-// The LED output of the other modes needs the device in WINUSB mode, which WebUSB has to be allowed to open.
-const usbLedWanted = c => !!(c && !c.demo && !c.update && !isIo4() && c.pid === WINUSB_PID && navigator.usb);
+// The LED output needs WebUSB to be allowed to open the device: in WINUSB mode, and in the IO4-Emulation mode with the static light (the LED
+// packets then go to a WinUSB interface of the device).
+const usbLedWanted = c => !!(c && !c.demo && !c.update && navigator.usb && (isIo4() ? !!(c.io4Led && c.io4Led.static) : c.pid === WINUSB_PID));
+const usbLedTarget = c => isIo4() ? { vendorId: IO4_VID, productId: IO4_PID } : { vendorId: VID, productId: WINUSB_PID };
 
 function gateNeeded() {
   const c = app.conn;
   if (!c) return true;
-  if (isIo4()) return !(c.serialPort && c.io4Hid);
+  if (isIo4()) return !(c.serialPort && c.io4Hid) || (usbLedWanted(c) && !c.usbLed);
   return usbLedWanted(c) && !c.usbLed;
 }
 
@@ -3277,18 +3619,21 @@ function updateGate() {
   $("welcomeConnect").disabled = !hid();
   if (c && on) {
     $("welcomeSetup").classList.toggle("io4", io4);
-    $("setupUsb").hidden = io4; $("setupSerial").hidden = !io4; $("setupHid").hidden = !io4;
+    $("setupUsb").hidden = !usbLedWanted(c); $("setupSerial").hidden = !io4; $("setupHid").hidden = !io4;
+    $("setupUsbState").textContent = c.usbLed ? "Allowed" : "Not allowed";
+    $("setupUsbState").className = "setup-state " + (c.usbLed ? "ok" : "warn");
+    $("setupUsbBtn").hidden = !!c.usbLed;
     if (io4) {
       $("setupTitle").innerHTML = "<span class='cfw-note'>IO4-Emulation mode</span>";
       $("setupIntro").innerHTML = "The device behaves like the arcade hardware.<br>The Toolkit needs your permission for each part of it: the browser asks for them one at a time.<br>Close the game first, it uses the same ports.";
       const serialOk = !!c.serialPort, n = c.serialCount || 0, hidOk = !!c.io4Hid;
       $("setupSerialText").innerHTML = serialAvailable()
-        ? "The slider and the two LED boards each have one.<br>They are listed under the same name: allow all three, in any order."
+        ? (io4Static() ? "The slider has one." : "The slider and the two LED boards each have one.<br>They are listed under the same name: allow all three, in any order.")
         : "Web Serial is not available in this browser: use Chrome or Edge on desktop.";
-      $("setupSerialState").textContent = serialOk ? "Allowed" : n + " of " + IO4_SERIAL_PORTS;
+      $("setupSerialState").textContent = serialOk ? "Allowed" : n + " of " + io4SerialPorts();
       $("setupSerialState").className = "setup-state " + (serialOk ? "ok" : "warn");
       $("setupSerialBtn").hidden = serialOk || !serialAvailable();
-      if (!serialOk && c.serialError && n >= IO4_SERIAL_PORTS) $("setupSerialText").innerHTML += "<br>" + esc(c.serialError);
+      if (!serialOk && c.serialError && n >= io4SerialPorts()) $("setupSerialText").innerHTML += "<br>" + esc(c.serialError);
       $("setupHidText").innerHTML = "The air beams and the TEST and SERVICE buttons.";
       $("setupHidState").textContent = hidOk ? "Allowed" : "Not allowed";
       $("setupHidState").className = "setup-state " + (hidOk ? "ok" : "warn");
@@ -3296,9 +3641,6 @@ function updateGate() {
     } else {
       $("setupTitle").textContent = "One more permission";
       $("setupIntro").innerHTML = "The Toolkit needs your permission to reach the device in WINUSB mode.";
-      $("setupUsbState").textContent = c.usbLed ? "Allowed" : "Not allowed";
-      $("setupUsbState").className = "setup-state " + (c.usbLed ? "ok" : "warn");
-      $("setupUsbBtn").hidden = !!c.usbLed;
     }
   }
   // ports that could not be opened (the game has them): look again by itself, so the page moves on when they are free
@@ -3315,7 +3657,7 @@ async function gateProbe() {
   app.gateProbing = true;
   try {
     if (usbLedWanted(c)) {
-      try { c.usbLed = (await navigator.usb.getDevices()).some(d => d.vendorId === VID && d.productId === WINUSB_PID); } catch (e) {}
+      try { const t = usbLedTarget(c); c.usbLed = (await navigator.usb.getDevices()).some(d => d.vendorId === t.vendorId && d.productId === t.productId); } catch (e) {}
     }
     if (isIo4()) {
       if (!c.serialPort && serialAvailable()) {
@@ -3334,7 +3676,7 @@ async function gateProbe() {
 
 async function allowUsbLed() {
   const c = app.conn; if (!c) return;
-  try { await navigator.usb.requestDevice({ filters: [{ vendorId: VID, productId: WINUSB_PID }] }); c.usbLed = true; }
+  try { await navigator.usb.requestDevice({ filters: [usbLedTarget(c)] }); c.usbLed = true; }
   catch (e) { if (e.name !== "NotFoundError") toast("Could not allow the LED output: " + e.message, "bad"); }
   updateGate();
 }

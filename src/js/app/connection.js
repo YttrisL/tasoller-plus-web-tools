@@ -135,6 +135,14 @@ async function adoptInner(devs, demo) {
   log("handshake ok, version: " + version + (conn.cfw ? " (Supernova custom firmware)" : ""));
   if (cmdDev.vendorId === IO4_VID) conn.mode = 5;
   else if (conn.pid in PID_MODE) conn.mode = PID_MODE[conn.pid];
+  if (conn.cfw && cmdDev.vendorId === IO4_VID && !conn.update) {      // the LED mode decides which permissions the page needs
+    try { conn.io4Led = await conn.api.io4LedConfig(); log("IO4 LED mode: " + (conn.io4Led.static ? "static light " + ledHex(conn.io4Led.rgb) : "LED driver emulation")); }
+    catch (e) { conn.io4Led = { static: false, rgb: [255, 255, 255] }; log("IO4 LED mode not available: " + e.message); }
+  }
+  if (conn.cfw && cmdDev.vendorId === IO4_VID && !conn.update) {
+    try { conn.io4Fn = await conn.api.io4Buttons(); log("function buttons: " + conn.io4Fn.map(io4SignalsText).join(", ")); }
+    catch (e) { conn.io4Fn = null; log("function buttons not available: " + e.message); }
+  }
   setConnUI("on"); $("reconnectBar").hidden = true; app.wasFlashed = false;
   if ((app.installCfw || load("installCfw") === "1") && conn.cfw && !conn.update) {        // Supernova was just installed with the Flasher: IO4-Emulation is the mode it starts in, also when the device had been in another mode with an earlier Supernova
     app.installCfw = false; store("installCfw", "0");

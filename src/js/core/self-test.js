@@ -99,6 +99,17 @@ async function selfTest() {
   for (const p of ext) for (let i = 0; i < p[5]; i++) { const key = p[3] * 24 + p[4] + i; if (seen.has(key) || hex(p.subarray(6 + 3 * i, 9 + 3 * i)) !== hex(Uint8Array.from(towerColors[key]))) throw new Error("extended LED packet content failed"); seen.add(key); }
   if (seen.size !== 48) throw new Error("extended LED packets do not cover every LED");
   if ((await dev4.ledExtInfo()).towerLeds !== 24) throw new Error("LED info failed");
+  const fn0 = await dev4.io4Buttons();
+  if (fn0.length !== 3 || fn0[0].join() !== String(IO4_SIGNAL_TEST) || fn0[1].join() !== String(IO4_SIGNAL_SERVICE) || fn0[2].length) throw new Error("function buttons default failed");
+  await dev4.setIo4Buttons([[0, 11, 32], [29], [16, 31]], true);        // several signals, an air beam, the coin
+  const fn1 = await dev4.io4Buttons();
+  if (fn1[0].join() !== "0,11,32" || fn1[1].join() !== "29" || fn1[2].join() !== "16,31") throw new Error("function buttons round trip failed");
+  if (io4SignalsText([9]) !== "TEST" || io4SignalsText([]) !== "Nothing" || io4SignalsText([0, 11, 32]) !== "1P START + 2 more") throw new Error("function buttons text failed");
+  const led0 = await dev4.io4LedConfig();
+  if (!led0.static || led0.rgb.join() !== "255,255,255") throw new Error("IO4 LED mode default failed");
+  await dev4.setIo4LedConfig(true, [10, 20, 30], true);
+  const led1 = await dev4.io4LedConfig();
+  if (!led1.static || led1.rgb.join() !== "10,20,30") throw new Error("IO4 LED mode round trip failed");
   let noLedExt = false;
   try { await new TasollerDevice(mkLink(new SimDevice())).ledExtInfo(); } catch (e) { noLedExt = e instanceof FlashError; }
   if (!noLedExt) throw new Error("the stock firmware must not answer the LED command");

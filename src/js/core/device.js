@@ -66,6 +66,30 @@ class TasollerDevice {
   // ---- individual tower LEDs (Supernova only, see led_ext.c of the firmware) ----
   // The three colors (9 bytes: red, green, blue each) of an air tower, 0 left and 1 right: the way the Toolkit lights them in the IO4-Emulation mode.
   async ledTowers(tower, colors) { await this.c(CMD.LED, [1, tower, ...colors], 2000, "set the tower colors"); }
+  // The LED mode of the IO4-Emulation mode (Supernova): the air towers show the LED boards of the game, or one static color. The mode is read by the
+  // device at its start, the color is shown at once; save writes both to the flash.
+  async io4LedConfig() { const p = need(await this.c(CMD.LED, [2], 2000, "IO4 LED mode"), 5, "IO4 LED mode"); return { static: p[1] === 1, rgb: [p[2], p[3], p[4]] }; }
+  async setIo4LedConfig(isStatic, rgb, save) { await this.c(CMD.LED, [3, isStatic ? 1 : 0, ...rgb, save ? 1 : 0], 5000, "set the IO4 LED mode"); }
+  // The signals of the two function buttons in the IO4-Emulation mode (Supernova): FN1, FN2 and both pressed together, a list of signal numbers each (see
+  // IO4_SIGNALS). The device keeps each as a mask of the 32 buttons of the board (4 bytes, little endian) and the coin (1 byte).
+  async io4Buttons() {
+    const p = need(await this.c(CMD.IO4_BUTTONS, [0], 2000, "function buttons"), 16, "function buttons"), out = [];
+    for (let w = 0; w < 3; w++) {
+      const codes = [], mask = (p[1 + 5 * w] | (p[2 + 5 * w] << 8) | (p[3 + 5 * w] << 16) | (p[4 + 5 * w] << 24)) >>> 0;
+      for (let bit = 0; bit < 32; bit++) if ((mask >>> bit) & 1) codes.push(bit);
+      if (p[5 + 5 * w] === 1) codes.push(IO4_SIGNAL_COIN);
+      out.push(codes);
+    }
+    return out;
+  }
+  async setIo4Buttons(lists, save) {
+    const bytes = [];
+    for (const codes of lists) {
+      let mask = 0; for (const c of codes) if (c < 32) mask = (mask | (1 << c)) >>> 0;
+      bytes.push(mask & 255, (mask >>> 8) & 255, (mask >>> 16) & 255, (mask >>> 24) & 255, codes.includes(IO4_SIGNAL_COIN) ? 1 : 0);
+    }
+    await this.c(CMD.IO4_BUTTONS, [1, ...bytes, save ? 1 : 0], 5000, "set the function buttons");
+  }
   async ledExtInfo() { const p = need(await this.c(CMD.LED, [0], 2000, "LED info"), 3, "LED info"); return { protocol: p[1], towerLeds: p[2] }; }
 
   // ---- settings backup (Supernova only, see settings_transfer.c of the firmware). Numbers are little endian. ----

@@ -14,7 +14,7 @@ device runs Supernova, the extra features show up as purple tabs and buttons.
 - **LED test**: light up the LEDs of the slider and of the air towers to check them.
 - **Config**: the USB mode, the sensitivity, the brightness and the keys.
 - **Flasher**: install a firmware update, Supernova included.
-- With **Supernova**: **Memory dump**, **IO4 mode config** and the backup of the settings (purple).
+- With **Supernova**: **Memory dump**, **IO4 mode config** (what the function buttons send to the game, and the air towers: emulation of the LED boards, or one static color) and the backup of the settings (purple).
 - **Useful links**.
 
 The page follows the light or dark theme of your system. The buttons at the top right change it.

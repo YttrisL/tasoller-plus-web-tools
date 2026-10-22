@@ -93,7 +93,16 @@ class SimDevice {
       case CMD.LED:
         if (!this.version.startsWith(CFW_VERSION_PREFIX)) return reply(5, nonce, [1]);
         if (p[0] === 1 && p[1] <= 1 && p.length >= 11) { this.towers = this.towers || [[], []]; this.towers[p[1]] = Array.from(p.subarray(2, 11)); return reply(CMD.LED, nonce, [1]); }
+        if (p[0] === 2) { const c = this.io4Led || { static: true, rgb: [255, 255, 255] }; return reply(CMD.LED, nonce, [2, c.static ? 1 : 0, ...c.rgb]); }
+        if (p[0] === 3 && p.length >= 6) { this.io4Led = { static: p[1] === 1, rgb: Array.from(p.subarray(2, 5)) }; if (p[5]) this.saves++; return reply(CMD.LED, nonce, [3]); }
         return p[0] === 0 ? reply(CMD.LED, nonce, [0, LED_EXT_VERSION, LED_TOWER_LEDS]) : reply(5, nonce, [1]);
+      case CMD.IO4_BUTTONS: {
+        if (!this.version.startsWith(CFW_VERSION_PREFIX)) return reply(5, nonce, [1]);
+        const bytes = this.fn || [0x00, 0x02, 0, 0, 0, 0x40, 0, 0, 0, 0, 0, 0, 0, 0, 0];      // FN1 is TEST (bit 9), FN2 is SERVICE (bit 6)
+        if (p[0] === 0) return reply(cmd, nonce, [0, ...bytes]);
+        if (p[0] === 1 && p.length >= 17 && p[5] <= 1 && p[10] <= 1 && p[15] <= 1) { this.fn = Array.from(p.subarray(1, 16)); if (p[16]) this.saves++; return reply(cmd, nonce, [1]); }
+        return reply(5, nonce, [1]);
+      }
       case CMD.SETTINGS: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.settingsCommand(p, nonce, reply) : reply(5, nonce, [1]);
       case CMD.SAVE_AND_RESET: this.resets = (this.resets || 0) + 1; return null;
       case CMD.DUMP: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.dump(p, nonce, reply) : reply(5, nonce, [1]);   // only the custom firmware has it
