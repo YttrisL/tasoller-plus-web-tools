@@ -10,6 +10,9 @@ async function selfTest() {
 
   for (const k of KNOWN_PACKAGES) if (!/^[0-9a-f]{64}$/.test(k.sha256) || !k.name) throw new Error("bad entry in the known hashes: " + k.name);
   if (!findKnownPackage(KNOWN_PACKAGES[0].sha256.toUpperCase())) throw new Error("known hash lookup failed");
+  if (isOldSupernova(KNOWN_PACKAGES.find(k => k.supernova)) || !isOldSupernova({ supernova: true }) || isOldSupernova(KNOWN_PACKAGES[0])) throw new Error("the latest Supernova release check failed");
+  const known = KNOWN_PACKAGES.filter(k => k.supernova);
+  if (!known.length || known.some(k => !k.name.startsWith(CFW_VERSION_PREFIX) || !findKnownPackage(k.sha256))) throw new Error("the known Supernova releases failed");
 
   const mkLink = sim => { const q = []; const io = {
     exchange: async f => { const r = sim.handle(f); q.length = 0; if (r) q.push(r); return q.shift() || null; },

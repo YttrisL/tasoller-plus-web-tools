@@ -230,6 +230,12 @@
   .led-controls .row { margin-bottom:10px; }
   /* ---- flasher page ---- */
   .flash-wrap { max-width:860px; }
+  .fw-outdated { color:var(--amber); }
+  .fw-outdated svg { width:17px; height:17px; vertical-align:-3px; margin-right:6px; }
+  .fw-known { color:var(--fg); }
+  .fw-known b { white-space:nowrap; }
+  table.kv b svg { width:15px; height:15px; vertical-align:-2px; margin-right:4px; }
+  .fw-known svg { width:15px; height:15px; vertical-align:-2px; margin-right:4px; }
   .flash-wrap h2 { font-size:1.05em; margin:22px 0 8px; }
   .box { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
   .frow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0; }
@@ -904,13 +910,23 @@ const THR_MIN = 20, THR_MAX = 130, BR_MIN = 7, BR_MAX = 25, DELAY_MAX = 50, BRIG
 // ------------------------------------------------------------------------------------------------
 // Known firmware packages. The Flasher computes the SHA-256 of the .skystar file you choose and looks it up here.
 // To recognise another package, add a line: its SHA-256 (64 lower case hex digits, for example from
-// `Get-FileHash file.skystar` in PowerShell), a name, and official: true only for the vendor's own files.
+// `Get-FileHash file.skystar` in PowerShell), a name, and official: true only for the vendor's own files, or supernova: true for a release of the
+// Supernova custom firmware (its file name is the name, and every new build of the firmware has a new hash to add here). The Supernova lines are the
+// history of the releases, the NEWEST FIRST: the first one is the latest and the Flasher warns about flashing any other. A line can have a label, shown
+// as what the package is.
 // A package that is not listed is still accepted when it passes the format checks, it just is not named.
 // ------------------------------------------------------------------------------------------------
 const KNOWN_PACKAGES = [
   { sha256: "e48e9fc929a9b4701f7492dbcc33fcedcd59800a7d7421fb013e3a8beb48e8ba", name: "TSLP_Main_APP_050_20250102.skystar", official: true },
-  { sha256: "2a39d910421f338d5c816b5b3e8bd61321491b9553fad61d93ccab2ac50d7c40", name: "dump-tool-tasoller-plus.skystar (flash dump firmware)", official: false },
+  { sha256: "10464fbf15261a1073a393462563656f5226e2ebf0432e92a4feb7d6eba37ec4", name: "SS321_CFW_SNV_20261022.skystar", official: false, supernova: true },
+  { sha256: "2a39d910421f338d5c816b5b3e8bd61321491b9553fad61d93ccab2ac50d7c40", name: "dump-tool-tasoller-plus.skystar (flash dump firmware)", official: false, label: "Memory Dump Tool" },
 ];
+
+// Is this package a Supernova release that is not the latest one?
+function isOldSupernova(known) {
+  const releases = KNOWN_PACKAGES.filter(k => k.supernova);
+  return !!(known && known.supernova && releases.length && releases[0] !== known);
+}
 
 function findKnownPackage(sha256) {
   const h = String(sha256 || "").toLowerCase();
@@ -1834,6 +1850,9 @@ async function selfTest() {
 
   for (const k of KNOWN_PACKAGES) if (!/^[0-9a-f]{64}$/.test(k.sha256) || !k.name) throw new Error("bad entry in the known hashes: " + k.name);
   if (!findKnownPackage(KNOWN_PACKAGES[0].sha256.toUpperCase())) throw new Error("known hash lookup failed");
+  if (isOldSupernova(KNOWN_PACKAGES.find(k => k.supernova)) || !isOldSupernova({ supernova: true }) || isOldSupernova(KNOWN_PACKAGES[0])) throw new Error("the latest Supernova release check failed");
+  const known = KNOWN_PACKAGES.filter(k => k.supernova);
+  if (!known.length || known.some(k => !k.name.startsWith(CFW_VERSION_PREFIX) || !findKnownPackage(k.sha256))) throw new Error("the known Supernova releases failed");
 
   const mkLink = sim => { const q = []; const io = {
     exchange: async f => { const r = sim.handle(f); q.length = 0; if (r) q.push(r); return q.shift() || null; },
@@ -3467,20 +3486,29 @@ async function doFlash() {
   } finally { app.flashing = false; app.busy--; updateButtons(); updateStream(); }
 }
 
+// The icons of the top bar: the green shield of the official firmware, the purple flame of Supernova.
+const FW_SHIELD = "<svg viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'><path d='M8 1l6 2v4.5c0 3.4-2.5 6.1-6 7.5-3.5-1.4-6-4.1-6-7.5V3l6-2zm-1.2 9.6l4-4.2-1-1-3 3.1-1.3-1.3-1 1 2.3 2.4z'/></svg>";
+const FW_FLAME = "<svg viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'><path d='M19.48 12.35c-1.57-4.08-7.16-4.3-5.81-10.23.1-.44-.37-.78-.75-.55C9.29 3.71 6.68 8 8.87 13.62c.18.46-.36.89-.75.59-1.81-1.37-2-3.34-1.84-4.75.06-.52-.62-.77-.91-.34C4.69 10.16 4 11.84 4 14.37c.38 5.6 5.11 7.32 6.81 7.54 2.43.31 5.06-.14 6.95-1.87 2.08-1.93 2.84-5.01 1.72-7.69zM10.2 17.38c1.44-.35 2.18-1.39 2.38-2.31.33-1.43-.96-2.83-.09-5.09.33 1.87 3.27 3.04 3.27 5.08 0 2.53-2.74 4.7-5.56 2.32z'/></svg>";
+const FW_WARNING = "<svg viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'><path d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/></svg>";
 function renderPackage() {
   const p = app.pkg;
   if (!p) { $("pkgBox").innerHTML = "<p class='muted'>No package loaded.</p>"; return; }
   let h = "";
+  const known = findKnownPackage(app.fileHash);
+  // What the package is, by its hash: the official firmware (green, shield), Supernova (purple, flame), another listed package, or unknown (orange).
+  const type = !app.fileHash ? p.header && p.header.Type
+    : known && known.official ? { html: "<b class='ok'>" + FW_SHIELD + "Official firmware</b>, unmodified." }
+    : known && known.supernova ? { html: "<b class='cfw-note'>" + FW_FLAME + "Supernova</b>, unmodified." }
+    : known ? "Known package, " + (known.label || known.name) + ", unmodified."
+    : { html: "<b class='warn'>Unknown</b>" };
   if (p.header) {
-    const rows = [["Version", p.version], ["Type", p.header.Type], ["Image size", p.image ? p.image.length + " bytes" : p.header.bin_len],
+    const rows = [["Version", p.version], ["Type", type], ["Image size", p.image ? p.image.length + " bytes" : p.header.bin_len],
       ["Version inside the image", p.embeddedVersion], ["Image 8-bit sum", p.sum8 === undefined ? "" : "0x" + p.sum8.toString(16).toUpperCase().padStart(2, "0")],
       ["File SHA-256", app.fileHash || "(not available in this context)"]];
-    h += "<table class='kv'>" + rows.filter(r => r[1] !== undefined && r[1] !== "").map(r => "<tr><td>" + r[0] + "</td><td class='mono'>" + esc(r[1]) + "</td></tr>").join("") + "</table>";
+    h += "<table class='kv'>" + rows.filter(r => r[1] !== undefined && r[1] !== "").map(r => "<tr><td>" + r[0] + "</td><td class='mono'>" + (r[1].html || esc(r[1])) + "</td></tr>").join("") + "</table>";
   }
-  const known = findKnownPackage(app.fileHash);
-  if (known && known.official) h += "<p class='ok'>This is the official stock package " + esc(known.name) + ", unmodified.</p>";
-  else if (known) h += "<p class='ok'>This is a known package: " + esc(known.name) + ".</p>";
-  else if (p.header && !p.errors.length) h += "<p class='warn'>The SHA-256 hash doesn't match the official 2.8 firmware. This is fine if you are flashing a custom firmware.</p>";
+  if (isOldSupernova(known)) h += "<p class='fw-outdated'>" + FW_WARNING + "This is an official version of Supernova, but not the latest one. You can still flash it.</p>";
+  if (!known && p.header && !p.errors.length) h += "<p class='warn'>The SHA-256 hash doesn't match the official 2.8 firmware. This is fine if you are flashing a custom firmware.</p>";
   if (p.errors.length) h += "<ul class='bad'>" + p.errors.map(e => "<li>" + esc(e) + "</li>").join("") + "</ul>";
   if (p.warnings.length) h += "<ul class='warn'>" + p.warnings.map(e => "<li>" + esc(e) + "</li>").join("") + "</ul>";
   if (!p.errors.length) h = "<p class='ok'>Package accepted by the same checks as the official tool.</p>" + h;

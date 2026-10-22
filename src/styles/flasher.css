@@ -1,5 +1,11 @@
   /* ---- flasher page ---- */
   .flash-wrap { max-width:860px; }
+  .fw-outdated { color:var(--amber); }
+  .fw-outdated svg { width:17px; height:17px; vertical-align:-3px; margin-right:6px; }
+  .fw-known { color:var(--fg); }
+  .fw-known b { white-space:nowrap; }
+  table.kv b svg { width:15px; height:15px; vertical-align:-2px; margin-right:4px; }
+  .fw-known svg { width:15px; height:15px; vertical-align:-2px; margin-right:4px; }
   .flash-wrap h2 { font-size:1.05em; margin:22px 0 8px; }
   .box { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; }
   .frow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0; }
