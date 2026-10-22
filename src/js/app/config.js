@@ -29,7 +29,7 @@ function renderConfig() {
   if (ok("delay")) { setRange($("sliderDelay"), clamp(r.delay, 0, DELAY_MAX)); $("numDelay").value = r.delay; }
   if (ok("ground")) { setRange($("sliderGround"), clamp(r.ground, BRIGHT_MIN, BRIGHT_MAX)); $("valGround").textContent = r.ground; }
   if (ok("air")) { setRange($("sliderAir"), clamp(r.air, BRIGHT_MIN, BRIGHT_MAX)); $("valAir").textContent = r.air; }
-  if (ok("mode")) { setRange($("sliderMode"), clamp(r.mode, 0, 4)); $("modeName").textContent = MODE_NAMES[clamp(r.mode, 0, 4)]; $("modeCur").textContent = "(current)"; $("btnMode").disabled = true; }
+  if (ok("mode")) { $("sliderMode").max = isCfw() ? MODE_NAMES.length - 1 : MODE_NAMES.length - 2; setRange($("sliderMode"), clamp(r.mode, 0, 5)); $("modeName").textContent = MODE_NAMES[clamp(r.mode, 0, 5)]; $("modeCur").textContent = "(current)"; $("btnMode").disabled = true; }
   disableMissing();
   renderKeyCard(); renderDebug();
 }
@@ -154,7 +154,7 @@ $("btnMode").onclick = async () => {
     if (back !== m) throw new Error("the device reports mode " + back);
     r.mode = back;
     if (c.demo) { await c.api.restartUsb(); c.mode = back; setConnUI("on"); await refreshConfig(); toast("Mode switched (simulated)", "ok"); return; }
-    app.switching = true; app.switchPid = MODE_PID[m];
+    app.switching = true; app.switchPid = MODE_USB[m];
     toast("Mode saved. Restarting USB...", "ok");
     await c.api.restartUsb();
   });

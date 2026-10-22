@@ -12,6 +12,7 @@
   .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); flex:none; }
   .official { display:inline-flex; align-items:center; gap:5px; color:var(--ok); font-weight:600; white-space:nowrap; }
   .official svg { width:17px; height:17px; }
+  .official.cfw-badge { color:var(--cfw); }
   .dot.on { background:var(--ok); } .dot.warn { background:var(--warn); } .dot.demo { background:var(--accent); }
   .conn { position:relative; }
   .conninfo { display:inline-flex; align-items:center; gap:8px; background:var(--panel2); border:1px solid var(--line2); padding:5px 12px; border-radius:6px; cursor:pointer; }

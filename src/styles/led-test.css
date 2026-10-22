@@ -6,6 +6,19 @@
   /* one tower = 24 LEDs in 3 groups of 8; the firmware gives each group a single color */
   .led-group { display:flex; flex-direction:column; gap:4px; padding:5px 8px; border-radius:6px; }
   .led-group b { display:block; width:30px; height:9px; border-radius:5px; background:var(--led, #222); box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
+  /* Supernova: each tower LED on its own, the bottom one is LED 1 */
+  .led-lines { display:none; flex-direction:column; gap:8px; }
+  .led-sub { display:flex; align-items:stretch; gap:5px; }
+  .led-tower.right .led-sub { flex-direction:row-reverse; }
+  .led-sub .col { display:flex; flex-direction:column; gap:3px; }
+  .led-sub b { display:block; width:30px; height:9px; border-radius:5px; background:var(--led, #222); box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
+  .led-bar { display:block; width:6px; border-radius:3px; background:var(--line2); cursor:pointer; }
+  .led-bar:hover { background:var(--muted); }
+  .led-bar.sel { background:var(--accent); }
+  .led-device.ind .led-group { display:none; }
+  .led-device.ind .led-lines { display:flex; }
+  .led-tower.edge, .led-strip.edge { cursor:pointer; border-color:var(--muted); }
+  .led-tower.sel, .led-strip.sel { border-color:var(--accent); }
   .led-zone { cursor:pointer; outline:2px solid transparent; outline-offset:2px; }
   .led-zone:hover { outline-color:var(--line2); }
   .led-zone.sel { outline-color:var(--accent); }
@@ -13,7 +26,7 @@
   .led-count { color:var(--muted); font-size:13px; margin:-6px 0 14px; }
   .led-label { position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:11px; color:var(--muted); }
   .led-center { position:relative; padding-bottom:28px; }
-  .led-strip { display:flex; align-items:stretch; height:150px; border:2px solid var(--line2); border-radius:6px; padding:6px; background:var(--bg); gap:2px; }
+  .led-strip { display:flex; align-items:stretch; height:174px; border:2px solid var(--line2); border-radius:6px; padding:14px; background:var(--bg); gap:2px; }
   .led-strip .pad, .led-strip .div { background:var(--led, #222); border-radius:2px; box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
   .led-strip .pad { flex:4; } .led-strip .div { flex:1; }
   .led-swatch { width:44px; height:28px; border-radius:4px; border:1px solid var(--line2); background:var(--led-pick, #000); }

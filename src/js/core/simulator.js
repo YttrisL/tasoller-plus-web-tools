@@ -11,6 +11,18 @@ function simDefaultKeymap(entry) {
   return e;
 }
 
+const SIM_DUMP_SECTIONS = [
+  { name: "SYS", addr: 0x40000000, length: 0x200, mode: "S" }, { name: "CLK", addr: 0x40000200, length: 0x100, mode: "S" },
+  { name: "GPIO", addr: 0x40004000, length: 0x200, mode: "S" }, { name: "SYSTICK", addr: 0xE000E010, length: 0x10, mode: "S" },
+  { name: "NVIC_ISER", addr: 0xE000E100, length: 0x20, mode: "S" }, { name: "SCB", addr: 0xE000ED00, length: 0x40, mode: "S" },
+  { name: "SRAM", addr: 0x20000000, length: 0x400, mode: "M" },        // smaller than the real 160 KiB, to keep the self-test quick
+  { name: "CONFIG", addr: 0x300000, length: 0x10, mode: "I" }, { name: "KPROM", addr: 0x301000, length: 0x10, mode: "I" },
+  { name: "XOM", addr: 0x200000, length: 0x40, mode: "I" }, { name: "OTP", addr: 0x310000, length: 0x800, mode: "I" },
+  { name: "LDROM", addr: 0x100000, length: 0x1000, mode: "M" }, { name: "APROM", addr: 0, length: 0x2000, mode: "M" },
+];
+const SIM_DUMP_INFO = [{ name: "CFG0", value: 0xFFFFFFFD }, { name: "UID0", value: 0x11223344 }, { name: "UID1", value: 0x55667788 }, { name: "UCID0", ok: false }];
+const simChipByte = a => (Math.imul(a >>> 2, 2654435761) >>> (8 * (a & 3))) & 255;
+
 class SimDevice {
   constructor(version = "SS321_APP_050_20250102") {
     this.key = SHARED_RK; this.version = version;
@@ -32,8 +44,8 @@ class SimDevice {
       case 1: this.key = AES.expandKey(AES.ecb(SHARED_RK, p.slice(0, 16), true)); return reply(1, nonce, []);
       case 2: return reply(2, nonce, Array.from(this.version, c => c.charCodeAt(0)));
       case CMD.MODE:
-        if (p[0] === 0) return reply(cmd, nonce, [0, this.mode]);
-        if (p[0] === 1) { if (p[1] > 4) return reply(5, nonce, [1]); this.mode = p[1]; this.saves++; return reply(cmd, nonce, []); }
+        if (p[0] === 0) return reply(cmd, nonce, [0, this.mode === 5 && p[1] !== 0xA5 ? 0 : this.mode]);     // the official tool sees IO4-Emulation as WINUSB
+        if (p[0] === 1) { if (p[1] > (this.version.startsWith(CFW_VERSION_PREFIX) ? 5 : 4)) return reply(5, nonce, [1]); this.mode = p[1]; this.saves++; return reply(cmd, nonce, []); }
         return reply(5, nonce, [1]);
       case CMD.KEYMAP:
         if (p[1] > 5) return reply(5, nonce, [1]);
@@ -78,6 +90,13 @@ class SimDevice {
         if (p[0] !== 0) return reply(5, nonce, [1]);
         this.global = [85, 85, 85, 85]; this.sensors = Array.from({ length: 32 }, () => [85, 85, 85, 85]); this.saves++; return reply(cmd, nonce, []);
       case CMD.RESET_BASELINE: this.baselineResets++; return reply(cmd, nonce, []);
+      case CMD.LED:
+        if (!this.version.startsWith(CFW_VERSION_PREFIX)) return reply(5, nonce, [1]);
+        if (p[0] === 1 && p[1] <= 1 && p.length >= 11) { this.towers = this.towers || [[], []]; this.towers[p[1]] = Array.from(p.subarray(2, 11)); return reply(CMD.LED, nonce, [1]); }
+        return p[0] === 0 ? reply(CMD.LED, nonce, [0, LED_EXT_VERSION, LED_TOWER_LEDS]) : reply(5, nonce, [1]);
+      case CMD.SETTINGS: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.settingsCommand(p, nonce, reply) : reply(5, nonce, [1]);
+      case CMD.SAVE_AND_RESET: this.resets = (this.resets || 0) + 1; return null;
+      case CMD.DUMP: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.dump(p, nonce, reply) : reply(5, nonce, [1]);   // only the custom firmware has it
       case 4:
         if (p[0] === 1) { this.size = le32(p, 1); this.slot.fill(0xFF); this.started = true; return reply(4, nonce, []); }
         if (p[0] === 2) {
@@ -88,6 +107,55 @@ class SimDevice {
         if (p[0] === 3) return sum8(this.slot, 0, this.size) === p[1] ? (this.trigger = true, reply(4, nonce, [])) : reply(5, nonce, [5]);
         if (p[0] === 4) { this.rebooted = true; return null; }
         return reply(5, nonce, [1]);
+      default: return reply(5, nonce, [1]);
+    }
+  }
+  // The settings backup of the custom firmware (same layout as settings_transfer.c).
+  settingsCommand(p, nonce, reply) {
+    const SIZE = 0x2DB, off = p[1] | (p[2] << 8), n = p[3];
+    if (!this.settingsBlock) { this.settingsBlock = Uint8Array.from({ length: SIZE }, (_, i) => (i * 5 + 1) & 255); this.settingsBlock[SETTINGS_MARKER_OFFSET] = SETTINGS_MARKER; this.staging = new Uint8Array(SIZE); }
+    switch (p[0]) {
+      case 0: return reply(CMD.SETTINGS, nonce, [0, SETTINGS_PROTOCOL, SIZE & 255, SIZE >> 8]);
+      case 1: {
+        const o = p[1] | (p[2] << 8), len = p[3];
+        if (!len || len > SETTINGS_CHUNK || o + len > SIZE) return reply(5, nonce, [1]);
+        return reply(CMD.SETTINGS, nonce, [1, p[1], p[2], len, ...this.settingsBlock.subarray(o, o + len)]);
+      }
+      case 2:
+        if (!n || n > SETTINGS_CHUNK || off + n > SIZE) return reply(5, nonce, [1]);
+        this.staging.set(p.subarray(4, 4 + n), off); return reply(CMD.SETTINGS, nonce, [2, 0]);
+      case 3: {
+        if (le32(p, 1) !== crc32(this.staging)) return reply(CMD.SETTINGS, nonce, [3, 1]);
+        if (this.staging[SETTINGS_MARKER_OFFSET] !== SETTINGS_MARKER) return reply(CMD.SETTINGS, nonce, [3, 2]);
+        this.settingsBlock = this.staging.slice(); this.saves++; return reply(CMD.SETTINGS, nonce, [3, 0]);
+      }
+      default: return reply(5, nonce, [1]);
+    }
+  }
+  // The chip dump of the custom firmware (same layout as dump.c). The "chip" is made of a repeatable noise.
+  dump(p, nonce, reply) {
+    const sections = SIM_DUMP_SECTIONS, put32 = v => u32le(v), name = t => Array.from(t, c => c.charCodeAt(0));
+    switch (p[0]) {
+      case 0: return reply(CMD.DUMP, nonce, [0, DUMP_PROTOCOL, sections.length, SIM_DUMP_INFO.length]);
+      case 1: {
+        const s = sections[p[1]]; if (!s) return reply(5, nonce, [1]);
+        return reply(CMD.DUMP, nonce, [1, p[1], s.mode.charCodeAt(0), ...put32(s.addr), ...put32(s.length), ...name(s.name)]);
+      }
+      case 2: {
+        const it = SIM_DUMP_INFO[p[1]]; if (!it) return reply(5, nonce, [1]);
+        return reply(CMD.DUMP, nonce, [2, p[1], it.ok === false ? 1 : 0, ...put32(it.ok === false ? 0 : it.value), ...name(it.name)]);
+      }
+      case 3: {
+        const mode = String.fromCharCode(p[1]), addr = le32(p, 2), n = p[6];
+        if (n < 4 || n > DUMP_CHUNK || n % 4 || addr % 4 || !["M", "I", "S"].includes(mode)) return reply(5, nonce, [1]);
+        this.dumpReads = (this.dumpReads || 0) + 1;
+        const head = [3, 0, ...put32(addr), n];
+        if (mode === "I" && addr >= 0x301000 && addr < 0x301010) { head[1] = 1; return reply(CMD.DUMP, nonce, head); }    // the key store is refused
+        const data = Uint8Array.from({ length: n }, (_, i) => simChipByte(addr + i));
+        const crc = crc16(data, crc16(Uint8Array.from(put32(addr))));
+        if (this.dumpCorrupt > 0) { this.dumpCorrupt--; data[0] ^= 0x55; }          // damaged on the way: the host has to ask again
+        return reply(CMD.DUMP, nonce, [...head, ...data, crc & 255, crc >> 8]);
+      }
       default: return reply(5, nonce, [1]);
     }
   }

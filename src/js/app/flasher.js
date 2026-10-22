@@ -17,6 +17,9 @@ async function doFlash() {
     });
     log("update sent in " + ((performance.now() - t0) / 1000).toFixed(1) + " s (device was " + version + ")");
     app.wasFlashed = !c.demo;
+    app.installCfw = !c.demo && !c.cfw && String(pkg.version).startsWith(CFW_VERSION_PREFIX);
+    store("installCfw", app.installCfw ? "1" : "0");                            // kept if the page is reloaded while the device restarts
+    if (app.installCfw) log("Supernova is being installed: the device will be switched to the IO4-Emulation mode when it is back");      // Supernova goes on a device that did not run it: it starts in the IO4-Emulation mode
     setProgress(100, 100, "Done. The Tasoller restarts and its bootloader installs the new firmware. Wait about 10 seconds: the page reconnects by itself, or use Connect.");
     toast("Update sent. The device is restarting.", "ok");
   } catch (e) {

@@ -1,0 +1,35 @@
+  /* ---- dump page ---- */
+  .tab.cfw-only { display:none; }
+  body.cfw .tab.cfw-only { display:inline-block; }
+  /* Supernova-only features carry a purple border */
+  .tab.cfw-only { border:1px solid var(--cfw); border-radius:6px; padding:6px 14px; margin:4px 0 4px 8px; }
+  .tab.cfw-only { position:relative; }
+  .tab.cfw-only[aria-current="page"] { background:color-mix(in srgb, var(--cfw) 18%, transparent); }
+  .tab.cfw-only[aria-current="page"]::after { content:""; position:absolute; left:-1px; right:-1px; bottom:-5px; height:2px; background:var(--accent); }     /* the blue underline of the other tabs, on the same line */
+  /* The invitation to install Supernova, for the official firmware */
+  .tab.promo { display:none; text-decoration:none; color:var(--fg); }
+  body.fw-official .tab.promo { display:inline-flex; align-items:center; }
+  .tab.promo { border:1px solid var(--cfw); border-radius:6px; padding:6px 14px; margin:4px 0 4px 8px; }
+  .tab.promo:hover { background:color-mix(in srgb, var(--cfw) 18%, transparent); }
+  .tab.promo b { color:var(--cfw); display:inline-flex; align-items:center; gap:3px; margin-left:4px; }
+  .tab.promo svg { width:16px; height:16px; }
+  .links { padding-left:20px; line-height:1.9; }
+  .links a { color:var(--accent); }
+  .cfw-soon { color:var(--cfw); font-size:20px; font-weight:600; margin:28px 0; }
+  .cfw-block { display:none; }
+  body.cfw .cfw-block { display:block; }
+  fieldset.card.cfw-block { margin:0 0 18px; max-width:1100px; border-color:var(--cfw); }
+  fieldset.card.cfw-block legend { color:var(--cfw); font-weight:600; }
+  .cfw-tick { display:none; }
+  body.cfw .cfw-tick { display:inline; color:var(--cfw); }
+  .hint { cursor:help; }
+  .hint i { display:inline-block; width:14px; height:14px; line-height:13px; margin-left:4px; border:1px solid currentColor; border-radius:50%; font-size:10px; font-weight:700; font-style:normal; text-align:center; vertical-align:1px; }
+  .cfw-note { color:var(--cfw); }
+  #ledBox:has(#ledIndNote:not(:empty)) { border:1px solid var(--cfw); border-radius:6px; padding:8px 10px; }   /* the Supernova note, the buttons and the state under the color picker */
+  #ledBox > p { margin:0 0 8px; }
+  #ledBox > p:last-child { margin:8px 0 0; }
+  .banner.cfw-banner { border-color:var(--cfw); }       /* a block that is about a Supernova feature */
+  table.dump-sections td:nth-child(n+2):nth-child(-n+3), table.dump-sections td:nth-last-child(2) { white-space:nowrap; }
+  table.dump-sections .btn.dl { padding:3px 8px; line-height:0; }
+  table.dump-sections .btn.dl svg { margin:0; vertical-align:0; width:16px; height:16px; }
+  .dump-info { columns:2 260px; column-gap:24px; margin-top:10px; }

@@ -39,6 +39,7 @@
   .fn-col { display:flex; flex-direction:column; gap:20px; align-items:center; padding-top:300px; }
   .fn { display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--muted); }
   .fn-btn { width:90px; height:90px; border-radius:50%; background:rgba(85,175,255,.07); border:2px solid var(--line); }
+  body.io4 .fn-btn { border-radius:8px; }
   .fn-btn.on { border-color:var(--amber); background:rgba(255,191,0,.16); color:var(--amber); }
   .test-foot { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; color:var(--muted); font-size:13px; }
   body.test-off .air-rows, body.test-off .grids, body.test-off .fn-col { opacity:.45; }

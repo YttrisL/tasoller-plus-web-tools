@@ -1,0 +1,21 @@
+  /* The page shown while no device is connected, and while a Supernova device in the IO4-Emulation mode still needs permissions. */
+  body.gate .tabs { display:none; }
+  body.gate .page.active { display:none; }
+  body.gate #page-welcome { display:block; }
+  .welcome { max-width:640px; margin:8vh auto 0; text-align:center; }
+  .welcome-brand { font-size:22px; font-weight:700; letter-spacing:.06em; margin-bottom:28px; }
+  .welcome-brand b { color:var(--accent); }
+  .welcome-brand span { font-weight:400; color:var(--muted); margin-left:8px; letter-spacing:0; }
+  .welcome h1 { font-size:20px; margin:0 0 14px; }
+  .welcome p { color:var(--muted); margin:0 0 20px; }
+  .welcome .btn { padding:9px 26px; }
+  #welcomeSetup { text-align:left; border:1px solid var(--line2); border-radius:8px; padding:18px 22px; background:var(--panel); }
+  #welcomeSetup.io4 { border-color:var(--cfw); }
+  #welcomeSetup h1 { text-align:center; }
+  #welcomeSetup > p { text-align:center; }
+  .setup-row { display:grid; grid-template-columns:1fr auto auto; gap:14px; align-items:center; padding:12px 0; border-top:1px solid var(--line); }
+  .setup-text b { display:block; }
+  .setup-text span { display:block; color:var(--muted); font-size:13px; }
+  .setup-state { font-weight:600; }
+  .setup-state.ok { color:var(--ok); }
+  .setup-state.warn { color:var(--warn); }

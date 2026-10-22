@@ -107,11 +107,17 @@ function frameLoop() { renderLive(false); requestAnimationFrame(frameLoop); }
 const START_FRAME = () => { const f = new Uint8Array(64); f.set([0x68, 0xDD, 0xC8]); return f; };
 const STOP_FRAME = () => { const f = new Uint8Array(64); f.set([0x68, 0xBB, 0xF8]); return f; };
 
-function wantStream() { const c = app.conn; return !!(c && c.streamDev && !c.update && !app.flashing && (app.page === "test" || (app.page === "config" && !$("advPanel").hidden))); }
+function wantStream() { const c = app.conn; return !!(c && !document.body.classList.contains("gate") && (c.streamDev || (isIo4() && c.serialPort)) && !c.update && !app.flashing && !app.dumping && (app.page === "test" || (app.page === "config" && !$("advPanel").hidden))); }
 async function updateStream() {
   const c = app.conn, notice = $("testNotice");
+  notice.classList.remove("cfw-banner");
   if (!c) { notice.hidden = !$("reconnectBar").hidden; notice.innerHTML = "Not connected. Use <b>Connect</b> in the top bar to see the live sensors."; $("streamInfo").textContent = "Live data: not connected"; return; }
   if (c.update) { notice.hidden = false; notice.textContent = "The device is in update mode: there is no live data. Restart it normally or use the Flasher."; $("streamInfo").textContent = "Live data: unavailable"; return; }
+  if (isIo4()) {                      // no stream interface: the slider serial port and the I/O board instead
+    if (!(await io4UpdateStream(c, notice))) return;
+    if (wantStream()) await startStream(); else await stopStream();
+    return;
+  }
   if (!c.streamDev) {
     notice.hidden = false;
     notice.innerHTML = 'The live data interface of the device is not authorised yet. <button class="btn" id="btnAllowLive">Allow live data</button>';
@@ -133,8 +139,14 @@ async function allowLive() {
   setConnUI("on"); updateStream();
 }
 async function startStream() {
-  const c = app.conn; if (!c || !c.streamDev || app.streaming) return;
+  const c = app.conn; if (!c || (!c.streamDev && !(isIo4() && c.serialPort)) || app.streaming) return;
   app.streaming = true; app.lastStreamKick = performance.now();
+  if (isIo4()) {
+    if (!(await io4StartSerial())) { app.streaming = false; return; }
+    log("live data started (slider serial port)");
+    clearInterval(app.streamTimer); app.streamTimer = setInterval(streamWatch, 500);
+    return;
+  }
   try { await c.streamDev.sendReport(0, START_FRAME()); log("live data started"); }
   catch (e) { app.streaming = false; log("could not start live data: " + e.message); toast("Could not start live data: " + e.message, "bad"); return; }
   clearInterval(app.streamTimer);
@@ -145,7 +157,9 @@ async function stopStream() {
   const c = app.conn;
   if (!app.streaming) return;
   app.streaming = false; $("streamInfo").textContent = "Live data: stopped";
+  if (isIo4()) { await io4StopSerial(); log("live data stopped"); app.live.clear(); return; }
   if (c && c.streamDev) { try { await c.streamDev.sendReport(0, STOP_FRAME()); log("live data stopped"); } catch (e) {} }
+  app.live.clear();
 }
 let lastCount = 0, lastTick = 0;
 function streamWatch() {
@@ -155,11 +169,13 @@ function streamWatch() {
   if (!app.streaming) { info.textContent = "Live data: stopped"; return; }
   if (L.packets === 0 || now - L.lastAt > 1500) {
     info.textContent = "Live data: waiting for packets...";
+    if (L.packets > 0) L.clear();                       // the last values would only look like a state of the device
     if (now - app.lastStreamKick > 3000 && app.conn && app.conn.streamDev) {   // ask again, in case the first request was lost
       app.lastStreamKick = now; app.conn.streamDev.sendReport(0, START_FRAME()).catch(() => {});
     }
     return;
   }
+  if (isIo4()) { info.textContent = "Live data: receiving from the slider port (" + Math.round(rate) + " reports/s" + (app.conn.io4Hid ? ", air beams and buttons from the I/O board)" : ")"); return; }
   info.textContent = "Live data: receiving (" + Math.round(rate) + " packets/s, chips " + L.chipSeen.map(x => x > 0 ? "ok" : "-").join(" ") + ", buttons " + (L.dbtSeen ? "ok" : "-") + ")";
 }
 

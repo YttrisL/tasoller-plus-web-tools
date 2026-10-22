@@ -46,21 +46,28 @@ const hexId = d => "0x" + d.vendorId.toString(16).toUpperCase().padStart(4, "0")
 
 function connectFilters(all) {
   if (all) return [];
-  return [...Object.keys(PID_MODE).map(p => ({ vendorId: VID, productId: Number(p) })), { vendorId: VID, productId: PID_UPDATE }];
+  return [...Object.keys(PID_MODE).map(p => ({ vendorId: VID, productId: Number(p) })), { vendorId: VID, productId: PID_UPDATE }, MODE_USB[5]];
 }
 
-const MODE_PID = { 0: 0x1231, 1: 0x1235, 2: 0x1234, 3: 0x1233, 4: 0x1232 };
+// What the browser is asked for after a mode switch. The IO4-Emulation mode (Supernova) is a composite device: only its command channel is of interest.
+const MODE_USB = {
+  0: { vendorId: VID, productId: 0x1231 }, 1: { vendorId: VID, productId: 0x1235 }, 2: { vendorId: VID, productId: 0x1234 },
+  3: { vendorId: VID, productId: 0x1233 }, 4: { vendorId: VID, productId: 0x1232 },
+  5: { vendorId: IO4_VID, productId: IO4_PID, usagePage: USAGE_PAGE_CMD },
+};
+// The interfaces of the IO4-Emulation device that are not the command channel (the I/O board and the serial port) are of no use here.
+const isVendorChannel = d => (d.collections || []).some(c => c.usagePage === USAGE_PAGE_CMD || c.usagePage === USAGE_PAGE_STREAM);
 
 // The browser only reconnects by itself to devices it already has permission for. After a mode switch the
 // device comes back with another USB ID, which is a new device for the browser: one click on Reconnect
 // (the chooser then only offers that device) grants it, and the page continues from there.
-function showReconnect(msg, pid) { app.reconnectPid = pid || null; $("reconnectMsg").textContent = msg; $("reconnectBar").hidden = false; updateButtons(); updateStream(); }
+function showReconnect(msg, filter) { app.reconnectPid = filter || null; $("reconnectMsg").textContent = msg; $("reconnectBar").hidden = false; updateButtons(); updateStream(); }
 $("btnReconnect").onclick = () => connectReal(app.reconnectPid);
 
-async function connectReal(pid) {
+async function connectReal(filter) {
   if (!hid()) { toast("This browser has no WebHID", "bad"); return; }
   let devs;
-  try { devs = await hid().requestDevice({ filters: pid ? [{ vendorId: VID, productId: pid }] : connectFilters(false) }); }
+  try { devs = await hid().requestDevice({ filters: filter ? [filter] : connectFilters(false) }); }
   catch (e) { log("not connected: " + e.message); return; }
   if (!devs.length) { log("no device chosen"); return; }
   // Other interfaces of the same device that were authorised earlier (for example the live data one)
@@ -72,7 +79,7 @@ async function connectReal(pid) {
 async function autoConnect() {
   if (!hid() || app.conn) return;
   let known = []; try { known = await hid().getDevices(); } catch (e) { return; }
-  known = known.filter(d => d.vendorId === VID && (d.productId === PID_UPDATE || d.productId in PID_MODE));
+  known = known.filter(d => (d.vendorId === VID && (d.productId === PID_UPDATE || d.productId in PID_MODE)) || (d.vendorId === IO4_VID && d.productId === IO4_PID));
   if (known.length) { log("reconnecting to an authorised device"); await adopt(known); }
 }
 
@@ -94,7 +101,7 @@ async function openDev(d) {
 async function adoptInner(devs, demo) {
   if (app.conn) await teardown(true);
   for (const d of devs) log("HID interface " + hexId(d) + ": " + describeCollections(d).text.join(" | "));
-  const cands = devs.filter(hasOutput);
+  const cands = devs.filter(d => hasOutput(d) && (d.vendorId !== IO4_VID || isVendorChannel(d)));
   if (!cands.length) { toast("No usable HID interface on that device.", "bad"); log("no HID interface with an output report among: " + devs.map(hexId).join(", ")); return; }
   try { for (const d of cands) await openDev(d); }
   catch (e) {
@@ -121,16 +128,31 @@ async function adoptInner(devs, demo) {
   const update = cmdDev.productId === PID_UPDATE;
   const streamDev = update ? null : (cands.find(d => d !== cmdDev) || null);
   for (const d of cands) if (d !== cmdDev && d !== streamDev) { try { await d.close(); } catch (e) {} }
-  const conn = { cmdDev, streamDev, io, link, api: new TasollerDevice(link), demo: !!demo, pid: cmdDev.productId, version, mode: null, update };
+  const conn = { cmdDev, streamDev, io, link, api: new TasollerDevice(link), demo: !!demo, pid: cmdDev.productId, version, mode: null, update, cfw: detectCfw(version, cmdDev.productName, demo) };
   if (streamDev) conn.streamIo = makeStreamListener(streamDev);
   app.conn = conn;
   log("opened " + (demo ? "simulated device" : hexId(cmdDev) + " " + (cmdDev.productName || "")) + (streamDev ? " + live data interface" : " (no live data interface)"));
-  log("handshake ok, version: " + version);
-  if (conn.pid in PID_MODE) conn.mode = PID_MODE[conn.pid];
+  log("handshake ok, version: " + version + (conn.cfw ? " (Supernova custom firmware)" : ""));
+  if (cmdDev.vendorId === IO4_VID) conn.mode = 5;
+  else if (conn.pid in PID_MODE) conn.mode = PID_MODE[conn.pid];
   setConnUI("on"); $("reconnectBar").hidden = true; app.wasFlashed = false;
+  if ((app.installCfw || load("installCfw") === "1") && conn.cfw && !conn.update) {        // Supernova was just installed with the Flasher: IO4-Emulation is the mode it starts in, also when the device had been in another mode with an earlier Supernova
+    app.installCfw = false; store("installCfw", "0");
+    if (conn.mode !== 5) {
+      try {
+        log("Supernova installed: switching to the IO4-Emulation mode");
+        await conn.api.setMode(5);
+        app.switching = true; app.switchPid = MODE_USB[5];
+        toast("Supernova installed. Switching to the IO4-Emulation mode...", "ok");
+        await conn.api.restartUsb();
+        return;
+      } catch (e) { app.switching = false; log("could not switch to the IO4-Emulation mode: " + e.message); toast("Could not switch to the IO4-Emulation mode: " + e.message, "bad"); }
+    }
+  }
   if (!conn.update) { await refreshConfig(true); }
   updateStream();
   updateButtons();
+  gateProbe();
 }
 
 function makeStreamListener(dev) {
@@ -144,11 +166,13 @@ function makeStreamListener(dev) {
 
 async function teardown(quiet) {
   const c = app.conn; if (!c) return;
+  if (led.dev && led.dev.io4) await ledDisconnect();
   await stopStream();
   app.conn = null; app.cfg = null; app.live.reset();
   try { c.io.close(); } catch (e) {}
   try { c.streamIo && c.streamIo.close(); } catch (e) {}
-  for (const d of [c.cmdDev, c.streamDev]) { if (d) { try { await d.close(); } catch (e) {} } }
+  if (c.io4Hid) { try { c.io4Hid.removeEventListener("inputreport", io4HidReport); } catch (e) {} }
+  for (const d of [c.cmdDev, c.streamDev, c.io4Hid]) { if (d) { try { await d.close(); } catch (e) {} } }
   setConnUI("off");
   buildGrid(0); updateButtons(); renderConfig();
   if (!quiet) log("disconnected");

@@ -4,15 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tasoller Plus Toolkit</title>
+<script>try { var t = localStorage.getItem("tasoller.theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <style>
   /* @include styles/base.css */
   /* @include styles/topbar.css */
+  /* @include styles/theme.css */
   /* @include styles/controls.css */
   /* @include styles/input-test.css */
   /* @include styles/config.css */
   /* @include styles/led-test.css */
   /* @include styles/flasher.css */
+  /* @include styles/dump.css */
   /* @include styles/log.css */
+  /* @include styles/welcome.css */
   /* @include styles/toasts.css */
 </style>
 </head>
@@ -22,10 +26,14 @@
 <!-- @include views/banners.html -->
 <main>
 
+<!-- @include views/welcome.html -->
 <!-- @include views/input-test.html -->
 <!-- @include views/led-test.html -->
 <!-- @include views/config.html -->
 <!-- @include views/flasher.html -->
+<!-- @include views/dump.html -->
+<!-- @include views/io4-config.html -->
+<!-- @include views/links.html -->
 <!-- @include views/log.html -->
 </main>
 
@@ -38,6 +46,8 @@
 // @include js/core/frames.js
 // @include js/core/link.js
 // @include js/core/device.js
+// @include js/core/dump.js
+// @include js/core/settings-backup.js
 // @include js/core/live-decoder.js
 // @include js/core/keys.js
 // @include js/core/package.js
@@ -55,11 +65,16 @@
 // @include js/app/connection-ui.js
 // @include js/app/config.js
 // @include js/app/input-test.js
+// @include js/app/io4-live.js
 // @include js/app/advanced.js
 // @include js/app/key-mapping.js
 // @include js/app/debug-panel.js
 // @include js/app/led-test.js
 // @include js/app/flasher.js
+// @include js/app/dump.js
+// @include js/app/settings-backup.js
+// @include js/app/welcome.js
+// @include js/app/theme.js
 // @include js/app/main.js
 </script>
 </body>

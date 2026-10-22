@@ -1,0 +1,7 @@
+  /* The theme picker in the top bar: system, light, dark */
+  .theme { display:inline-flex; border:1px solid var(--line2); border-radius:6px; overflow:hidden; margin-left:12px; flex:none; }
+  .theme button { background:none; border:0; padding:5px 8px; cursor:pointer; color:var(--muted); display:inline-flex; align-items:center; }
+  .theme button + button { border-left:1px solid var(--line2); }
+  .theme button:hover { color:var(--fg); }
+  .theme button[aria-pressed="true"] { background:var(--panel2); color:var(--accent); }
+  .theme svg { width:16px; height:16px; }

@@ -1,6 +1,24 @@
 <!-- ============================ CONFIG ============================ -->
 <section id="page-config" class="page" aria-label="Config">
   <div id="cfgNotice" class="banner warn" hidden></div>
+  <fieldset class="card cfw-block" id="settingsCard">
+    <legend>Settings backup (Supernova):</legend>
+    <div class="card-body">
+      <div>
+        <div class="row">
+          <button class="btn" id="btnSetExport" type="button" disabled>Export settings</button>
+          <button class="btn plain" id="btnSetImport" type="button" disabled>Import settings</button>
+          <input type="file" id="setImportFile" accept=".snvset" hidden>
+        </div>
+      </div>
+      <div class="tips">
+        <div><b>Tips:</b></div>
+        <p><b>Export settings</b> saves everything the device keeps in its settings page to a file: thresholds, key maps, USB mode, brightness, delay and touch tuning.</p>
+        <p><b>Import settings</b> puts such a file back. It replaces all the settings and the device restarts.</p>
+      </div>
+    </div>
+  </fieldset>
+
   <div class="cfg-grid">
     <fieldset class="card">
       <legend>Settings for the sensors thresholds:</legend>
@@ -83,13 +101,14 @@
         <div class="field">
           <span class="lab">Mode: <b id="modeName">-</b> <span class="muted" id="modeCur"></span></span>
           <div class="row"><input type="range" id="sliderMode" min="0" max="4" step="1" value="0"></div>
-          <div class="ticks"><span>WINUSB</span><span>4K</span><span>8K</span><span>16K</span><span>32K</span></div>
+          <div class="ticks"><span>WINUSB</span><span>4K</span><span>8K</span><span>16K</span><span>32K</span><span class="cfw-tick">IO4</span></div>
         </div>
         <button class="btn" id="btnMode" disabled>Switch mode</button>
       </div>
       <div class="tips">
         <div><b>Tips:</b></div>
         <p><b>WINUSB</b> is the mode for the game (chuniio / segatools). The 4K, 8K, 16K and 32K modes make the ground slider type keyboard keys instead.</p>
+        <p class="cfw-block"><b class="cfw-note">Supernova:</b> <b>IO4-Emulation</b> reproduces the way official hardware behaves towards the game. In this mode, there is no need for a custom driver, the game recognizes the device automatically.</p>
         <p>Switching restarts the USB connection: the device disappears and comes back with another USB ID. Press <b>Connect</b> again if the page does not reconnect by itself.</p>
       </div>
     </div>

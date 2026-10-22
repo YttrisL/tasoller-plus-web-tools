@@ -10,8 +10,10 @@ class TasollerDevice {
   constructor(link) { this.link = link; }
   c(cmd, payload, timeout, what) { return this.link.command(cmd, payload, timeout, what); }
 
-  async getMode() { const p = need(await this.c(CMD.MODE, [0], 2000, "read mode"), 2, "mode"); return p[1]; }
-  async setMode(m) { await this.c(CMD.MODE, [1, clamp(m, 0, 4)], 5000, "set mode"); }
+  // The 0xA5 after the read asks Supernova for the real mode (5 is IO4-Emulation); the official firmware ignores it, and the
+  // official tool, which does not send it, sees IO4-Emulation as WINUSB.
+  async getMode() { const p = need(await this.c(CMD.MODE, [0, 0xA5], 2000, "read mode"), 2, "mode"); return p[1]; }
+  async setMode(m) { await this.c(CMD.MODE, [1, clamp(m, 0, MODE_NAMES.length - 1)], 5000, "set mode"); }
   // Re-enumerates USB with the stored mode. The device may drop off the bus before it answers.
   async restartUsb() { try { await this.c(CMD.RESTART_USB, [], 2000, "restart USB"); } catch (e) { this.link.log("restart USB: " + e.message + " (normal if the device already re-enumerated)"); } }
   // Key map of mode 1..4: 48 bytes, HID usage codes. Entry [p] is the key of firmware sensor p (sensor = 31 - p),
@@ -60,6 +62,44 @@ class TasollerDevice {
   save() { return this.c(CMD.SAVE, [], 5000, "save settings"); }
   restoreFactoryThresholds() { return this.c(CMD.RESTORE, [0], 8000, "restore factory thresholds"); }
   resetBaseline() { return this.c(CMD.RESET_BASELINE, [1, 0], 5000, "reset baseline"); }
+
+  // ---- individual tower LEDs (Supernova only, see led_ext.c of the firmware) ----
+  // The three colors (9 bytes: red, green, blue each) of an air tower, 0 left and 1 right: the way the Toolkit lights them in the IO4-Emulation mode.
+  async ledTowers(tower, colors) { await this.c(CMD.LED, [1, tower, ...colors], 2000, "set the tower colors"); }
+  async ledExtInfo() { const p = need(await this.c(CMD.LED, [0], 2000, "LED info"), 3, "LED info"); return { protocol: p[1], towerLeds: p[2] }; }
+
+  // ---- settings backup (Supernova only, see settings_transfer.c of the firmware). Numbers are little endian. ----
+  async settingsInfo() { const p = need(await this.c(CMD.SETTINGS, [0], 2000, "settings info"), 4, "settings info"); return { protocol: p[1], size: p[2] | (p[3] << 8) }; }
+  async settingsRead(offset, n) {
+    const p = need(await this.c(CMD.SETTINGS, [1, offset & 255, offset >> 8, n], 2000, "read settings"), 4 + n, "read settings");
+    if (p[0] !== 1 || (p[1] | (p[2] << 8)) !== offset || p[3] !== n) throw new FlashError("read settings: the reply is for another request");
+    return p.slice(4, 4 + n);
+  }
+  async settingsStage(offset, data) { await this.c(CMD.SETTINGS, [2, offset & 255, offset >> 8, data.length, ...data], 2000, "send settings"); }
+  async settingsCommit(crc) { const p = need(await this.c(CMD.SETTINGS, [3, ...u32le(crc)], 5000, "apply settings"), 2, "apply settings"); return p[1]; }   // 0 done, 1 bad CRC-32, 2 not a settings block
+  saveAndReset() { return this.link.sendNoReply(CMD.SAVE_AND_RESET, []); }
+
+  // ---- chip dump (Supernova only, see dump.c of the firmware). Numbers are little endian. ----
+  async dumpHello() { const p = need(await this.c(CMD.DUMP, [0], 2000, "dump hello"), 4, "dump hello"); return { protocol: p[1], sections: p[2], infos: p[3] }; }
+  async dumpSection(i) {
+    const p = need(await this.c(CMD.DUMP, [1, i], 2000, "dump section " + i), 11, "dump section");
+    return { index: i, mode: String.fromCharCode(p[2]), addr: le32(p, 3), length: le32(p, 7), name: String.fromCharCode(...p.subarray(11)) };
+  }
+  async dumpInfo(i) {
+    const p = need(await this.c(CMD.DUMP, [2, i], 2000, "dump info " + i), 7, "dump info");
+    return { index: i, ok: p[2] === 0, value: le32(p, 3), name: String.fromCharCode(...p.subarray(7)) };
+  }
+  // Up to DUMP_CHUNK bytes of the chip. { refused: true } when the chip will not give them, else { data }.
+  async dumpRead(mode, addr, n) {
+    const p = need(await this.c(CMD.DUMP, [3, mode.charCodeAt(0), ...u32le(addr), n], 2000, "dump read"), 7, "dump read");
+    const where = "0x" + addr.toString(16).toUpperCase().padStart(8, "0");
+    if (p[0] !== 3 || le32(p, 2) !== addr || p[6] !== n) throw new FlashError("dump read at " + where + ": the reply is for another request");
+    if (p[1] !== 0) return { refused: true };
+    need(p, 9 + n, "dump read");
+    const data = p.slice(7, 7 + n);
+    if (crc16(data, crc16(Uint8Array.from(u32le(addr)))) !== (p[7 + n] | (p[8 + n] << 8))) throw new FlashError("dump read at " + where + ": bad checksum");
+    return { data };
+  }
 
   // Read everything the UI shows. A setting that fails to read is left null (and logged by the caller).
   async readAll(onError = () => {}) {

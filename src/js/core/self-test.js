@@ -48,6 +48,61 @@ async function selfTest() {
   const lp = buildLedPacket(Array.from({ length: 31 }, (_, i) => [i, 1, 2]), [[10, 11, 12], [13, 14, 15], [16, 17, 18]], [[20, 21, 22], [23, 24, 25], [26, 27, 28]]);
   if (lp.length !== 114 || lp[0] !== 0x44 || lp[1] !== 0x4C || lp[2] !== 2 || lp[3 + 3 * 30] !== 30 || lp[96] !== 10 || lp[105] !== 20 || lp[113] !== 28) throw new Error("LED packet layout failed");
 
+  // the chip dump of the custom firmware: a damaged piece is asked for again, a refused one is listed
+  const sim4 = new SimDevice(CFW_VERSION_PREFIX + "TEST"), dev4 = new TasollerDevice(mkLink(sim4));
+  sim4.dumpCorrupt = 2;
+  const dump = await runDump(dev4, { version: CFW_VERSION_PREFIX + "TEST" });
+  const kprom = dump.sections.find(s => s.name === "KPROM"), apr = dump.sections.find(s => s.name === "APROM");
+  if (dump.sections.length !== SIM_DUMP_SECTIONS.length || dump.bytes !== SIM_DUMP_SECTIONS.reduce((n, s) => n + s.length, 0)) throw new Error("dump sections failed");
+  if (!kprom || kprom.verified || kprom.refused.length !== 1 || !apr.verified || apr.data[0x1001 & 0x1FFF] !== simChipByte(0x1001) || dump.sections.reduce((n, s) => n + s.retries, 0) !== 2) throw new Error("dump content failed");
+  if (dumpInfoLines(dump, true).join() !== "VERSION " + CFW_VERSION_PREFIX + "TEST,CFG0 FFFFFFFD,UID0 XXXXXXXX,UID1 XXXXXXXX,UCID0 ERROR" || dumpInfoLines(dump, false)[2] !== "UID0 11223344") throw new Error("dump info failed");
+  if (crc32(new TextEncoder().encode("123456789")) !== 0xCBF43926 || crc16(new TextEncoder().encode("123456789")) !== 0x29B1) throw new Error("dump checksums failed");
+  if ((await dumpZip(dump, true).arrayBuffer()).byteLength < dump.bytes) throw new Error("dump zip failed");
+  let noDump = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).dumpHello(); } catch (e) { noDump = e instanceof FlashError; }
+  if (!noDump) throw new Error("the stock firmware must not answer the dump command");
+
+  // the settings backup: export, damage and refusal of a file, import
+  const dev5 = new TasollerDevice(mkLink(sim4));
+  const saved = await readSettingsBlock(dev5), file = settingsFile(saved);
+  if (saved.length !== 0x2DB || hex(parseSettingsFile(file)) !== hex(saved)) throw new Error("settings export failed");
+  const changed = saved.slice(); changed[100] ^= 0xFF; changed[SETTINGS_MARKER_OFFSET] = SETTINGS_MARKER;
+  await writeSettingsBlock(dev5, changed);
+  if (hex(await readSettingsBlock(dev5)) !== hex(changed)) throw new Error("settings import failed");
+  await writeSettingsBlock(dev5, saved); if (hex(await readSettingsBlock(dev5)) !== hex(saved)) throw new Error("settings restore failed");
+  const bad = [file.slice(0, 20), file.map((b, i) => i === 50 ? b ^ 1 : b), file.map((b, i) => i === 0 ? 0x58 : b), settingsFile(saved.map((b, i) => i === SETTINGS_MARKER_OFFSET ? 0 : b))];
+  for (const b of bad) { let refused = false; try { parseSettingsFile(b); } catch (e) { refused = e instanceof FlashError; } if (!refused) throw new Error("a bad settings file was accepted"); }
+  let noSettings = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).settingsInfo(); } catch (e) { noSettings = e instanceof FlashError; }
+  if (!noSettings) throw new Error("the stock firmware must not answer the settings command");
+
+  // the IO4-Emulation mode: only Supernova accepts it, and the official tool's plain read sees WINUSB
+  const sim6 = new SimDevice(CFW_VERSION_PREFIX + "TEST"), l6 = mkLink(sim6), dev6 = new TasollerDevice(l6);
+  await dev6.setMode(5);
+  if ((await dev6.getMode()) !== 5 || (await l6.command(CMD.MODE, [0], 2000))[1] !== 0 || MODE_USB[5].vendorId !== 0x0CA3 || MODE_USB[5].productId !== 0x0021) throw new Error("IO4-Emulation mode failed");
+  let stock5 = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).setMode(5); } catch (e) { stock5 = e instanceof FlashError; }
+  if (!stock5) throw new Error("the stock firmware must refuse the IO4-Emulation mode");
+
+  // the LEDs in the IO4-Emulation mode: the slider frame is what the firmware's parser takes, colors land on the right LED
+  const dl = buildLedPacket(Array.from({ length: 31 }, (_, k) => [k === 0 ? 0xFF : k, k === 1 ? 0xFD : 100 + k, 7]), [[9, 8, 7], [9, 8, 7], [9, 8, 7]], [[9, 8, 7], [9, 8, 7], [9, 8, 7]]);
+  const frame = buildSliderLedFrame(dl), raw = []; let esc = false;
+  for (const b of frame) { if (b === 0xFD) { esc = true; continue; } raw.push(esc ? b + 1 : b); esc = false; }
+  if (raw[0] !== 0xFF || raw[1] !== 2 || raw[2] !== 97 || raw.length !== 3 + 97 + 1 || raw.reduce((a, b) => (a + b) & 255, 0) !== 0) throw new Error("slider LED frame failed");
+  if (raw[3 + 1] !== 7 || raw[3 + 1 + 1] !== 0xFF || raw[3 + 1 + 2] !== 100 || raw[3 + 1 + 3 + 2] !== 0xFD) throw new Error("slider LED colors failed");     // k = 0 is the first color of the frame, the rightmost LED: blue, red, green
+  await dev4.ledTowers(1, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  if (sim4.towers[1].join() !== "1,2,3,4,5,6,7,8,9") throw new Error("tower colors failed");
+
+  // the individual tower LEDs: the packets cover every LED once, keep the 64 byte size that sets them apart from the official packet
+  const towerColors = Array.from({ length: 48 }, (_, i) => [i + 1, 100 + i, 200 - i]), ext = buildLedExtPackets(towerColors), seen = new Set();
+  if (ext.length !== 4 || ext.some(p => p.length !== 64 || p[0] !== 0x44 || p[1] !== 0x58 || p[2] !== LED_EXT_VERSION)) throw new Error("extended LED packet layout failed");
+  for (const p of ext) for (let i = 0; i < p[5]; i++) { const key = p[3] * 24 + p[4] + i; if (seen.has(key) || hex(p.subarray(6 + 3 * i, 9 + 3 * i)) !== hex(Uint8Array.from(towerColors[key]))) throw new Error("extended LED packet content failed"); seen.add(key); }
+  if (seen.size !== 48) throw new Error("extended LED packets do not cover every LED");
+  if ((await dev4.ledExtInfo()).towerLeds !== 24) throw new Error("LED info failed");
+  let noLedExt = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).ledExtInfo(); } catch (e) { noLedExt = e instanceof FlashError; }
+  if (!noLedExt) throw new Error("the stock firmware must not answer the LED command");
+
   // a whole update against a simulated device, and a version mismatch is refused
   const image = new Uint8Array(3001).map((_, i) => (i * 7 + 3) & 255);
   const sim3 = new SimDevice("SS321_APP_TEST"), l3 = mkLink(sim3);

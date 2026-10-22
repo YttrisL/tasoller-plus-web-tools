@@ -4,20 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tasoller Plus Toolkit</title>
+<script>try { var t = localStorage.getItem("tasoller.theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <style>
   :root {
     --bg:#101114; --bar:#15171b; --panel:#161b24; --panel2:#1c2330; --line:#2d2f34; --line2:#3a3d44;
     --fg:#e8eaed; --muted:#9aa0a8; --accent:#55afff; --amber:#ffbf00;
     --btn:#35648f; --btn-h:#3f75a8; --danger:#a24b4b; --danger-h:#b65c5c;
-    --ok:#3fb950; --warn:#d29922; --bad:#f85149; --cell-line:#333; --input:#1b2230; --track:#2f3238;
+    --cfw:#b57bff; --ok:#3fb950; --warn:#d29922; --bad:#f85149; --cell-line:#333; --input:#1b2230; --track:#2f3238;
   }
+  /* The theme follows the system unless the user picked one (data-theme on <html>, set by the theme picker). */
+  :root { color-scheme:dark; }
   @media (prefers-color-scheme: light) {
-    :root {
-      --bg:#f3f4f6; --bar:#ffffff; --panel:#ffffff; --panel2:#eef1f5; --line:#d4d7dd; --line2:#bfc4cc;
-      --fg:#1c1f24; --muted:#5d6570; --accent:#1a73c8; --amber:#c98400;
-      --btn:#2f6fa8; --btn-h:#3b82c2; --danger:#b04545; --danger-h:#c25555;
-      --ok:#1a7f37; --warn:#9a6700; --bad:#cf222e; --cell-line:#c9cdd4; --input:#f3f6fa; --track:#cfd4dc;
+    :root:not([data-theme="dark"]) {
+    --bg:#f3f4f6; --bar:#ffffff; --panel:#ffffff; --panel2:#eef1f5; --line:#d4d7dd; --line2:#bfc4cc;
+    --fg:#1c1f24; --muted:#5d6570; --accent:#1a73c8; --amber:#c98400;
+    --btn:#2f6fa8; --btn-h:#3b82c2; --danger:#b04545; --danger-h:#c25555;
+    --cfw:#7a3fd1; --ok:#1a7f37; --warn:#9a6700; --bad:#cf222e; --cell-line:#c9cdd4; --input:#f3f6fa; --track:#cfd4dc;
+    color-scheme:light;
     }
+  }
+  :root[data-theme="light"] {
+    --bg:#f3f4f6; --bar:#ffffff; --panel:#ffffff; --panel2:#eef1f5; --line:#d4d7dd; --line2:#bfc4cc;
+    --fg:#1c1f24; --muted:#5d6570; --accent:#1a73c8; --amber:#c98400;
+    --btn:#2f6fa8; --btn-h:#3b82c2; --danger:#b04545; --danger-h:#c25555;
+    --cfw:#7a3fd1; --ok:#1a7f37; --warn:#9a6700; --bad:#cf222e; --cell-line:#c9cdd4; --input:#f3f6fa; --track:#cfd4dc;
+    color-scheme:light;
   }
   * { box-sizing:border-box; }
   html, body { margin:0; }
@@ -39,6 +50,7 @@
   .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); flex:none; }
   .official { display:inline-flex; align-items:center; gap:5px; color:var(--ok); font-weight:600; white-space:nowrap; }
   .official svg { width:17px; height:17px; }
+  .official.cfw-badge { color:var(--cfw); }
   .dot.on { background:var(--ok); } .dot.warn { background:var(--warn); } .dot.demo { background:var(--accent); }
   .conn { position:relative; }
   .conninfo { display:inline-flex; align-items:center; gap:8px; background:var(--panel2); border:1px solid var(--line2); padding:5px 12px; border-radius:6px; cursor:pointer; }
@@ -54,6 +66,13 @@
   .pop .pop-value { margin:3px 0 0 6px; font-size:12.5px; }
   .conn-text { color:var(--fg); font-weight:600; }
 
+  /* The theme picker in the top bar: system, light, dark */
+  .theme { display:inline-flex; border:1px solid var(--line2); border-radius:6px; overflow:hidden; margin-left:12px; flex:none; }
+  .theme button { background:none; border:0; padding:5px 8px; cursor:pointer; color:var(--muted); display:inline-flex; align-items:center; }
+  .theme button + button { border-left:1px solid var(--line2); }
+  .theme button:hover { color:var(--fg); }
+  .theme button[aria-pressed="true"] { background:var(--panel2); color:var(--accent); }
+  .theme svg { width:16px; height:16px; }
   /* ---- buttons / controls ---- */
   .btn { background:var(--btn); border:1px solid transparent; border-radius:4px; padding:6px 14px; cursor:pointer; color:#fff; }
   .btn:hover:not(:disabled) { background:var(--btn-h); }
@@ -118,6 +137,7 @@
   .fn-col { display:flex; flex-direction:column; gap:20px; align-items:center; padding-top:300px; }
   .fn { display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--muted); }
   .fn-btn { width:90px; height:90px; border-radius:50%; background:rgba(85,175,255,.07); border:2px solid var(--line); }
+  body.io4 .fn-btn { border-radius:8px; }
   .fn-btn.on { border-color:var(--amber); background:rgba(255,191,0,.16); color:var(--amber); }
   .test-foot { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; color:var(--muted); font-size:13px; }
   body.test-off .air-rows, body.test-off .grids, body.test-off .fn-col { opacity:.45; }
@@ -180,6 +200,19 @@
   /* one tower = 24 LEDs in 3 groups of 8; the firmware gives each group a single color */
   .led-group { display:flex; flex-direction:column; gap:4px; padding:5px 8px; border-radius:6px; }
   .led-group b { display:block; width:30px; height:9px; border-radius:5px; background:var(--led, #222); box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
+  /* Supernova: each tower LED on its own, the bottom one is LED 1 */
+  .led-lines { display:none; flex-direction:column; gap:8px; }
+  .led-sub { display:flex; align-items:stretch; gap:5px; }
+  .led-tower.right .led-sub { flex-direction:row-reverse; }
+  .led-sub .col { display:flex; flex-direction:column; gap:3px; }
+  .led-sub b { display:block; width:30px; height:9px; border-radius:5px; background:var(--led, #222); box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
+  .led-bar { display:block; width:6px; border-radius:3px; background:var(--line2); cursor:pointer; }
+  .led-bar:hover { background:var(--muted); }
+  .led-bar.sel { background:var(--accent); }
+  .led-device.ind .led-group { display:none; }
+  .led-device.ind .led-lines { display:flex; }
+  .led-tower.edge, .led-strip.edge { cursor:pointer; border-color:var(--muted); }
+  .led-tower.sel, .led-strip.sel { border-color:var(--accent); }
   .led-zone { cursor:pointer; outline:2px solid transparent; outline-offset:2px; }
   .led-zone:hover { outline-color:var(--line2); }
   .led-zone.sel { outline-color:var(--accent); }
@@ -187,7 +220,7 @@
   .led-count { color:var(--muted); font-size:13px; margin:-6px 0 14px; }
   .led-label { position:absolute; left:0; right:0; bottom:6px; text-align:center; font-size:11px; color:var(--muted); }
   .led-center { position:relative; padding-bottom:28px; }
-  .led-strip { display:flex; align-items:stretch; height:150px; border:2px solid var(--line2); border-radius:6px; padding:6px; background:var(--bg); gap:2px; }
+  .led-strip { display:flex; align-items:stretch; height:174px; border:2px solid var(--line2); border-radius:6px; padding:14px; background:var(--bg); gap:2px; }
   .led-strip .pad, .led-strip .div { background:var(--led, #222); border-radius:2px; box-shadow:0 0 var(--glow, 0px) var(--led, transparent); }
   .led-strip .pad { flex:4; } .led-strip .div { flex:1; }
   .led-swatch { width:44px; height:28px; border-radius:4px; border:1px solid var(--line2); background:var(--led-pick, #000); }
@@ -207,6 +240,41 @@
   table.kv td.mono { word-break:break-all; }
   pre.log { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px; overflow:auto; max-height:260px; font-size:12px; margin:6px 0; }
   ul { margin:6px 0; padding-left:22px; }
+  /* ---- dump page ---- */
+  .tab.cfw-only { display:none; }
+  body.cfw .tab.cfw-only { display:inline-block; }
+  /* Supernova-only features carry a purple border */
+  .tab.cfw-only { border:1px solid var(--cfw); border-radius:6px; padding:6px 14px; margin:4px 0 4px 8px; }
+  .tab.cfw-only { position:relative; }
+  .tab.cfw-only[aria-current="page"] { background:color-mix(in srgb, var(--cfw) 18%, transparent); }
+  .tab.cfw-only[aria-current="page"]::after { content:""; position:absolute; left:-1px; right:-1px; bottom:-5px; height:2px; background:var(--accent); }     /* the blue underline of the other tabs, on the same line */
+  /* The invitation to install Supernova, for the official firmware */
+  .tab.promo { display:none; text-decoration:none; color:var(--fg); }
+  body.fw-official .tab.promo { display:inline-flex; align-items:center; }
+  .tab.promo { border:1px solid var(--cfw); border-radius:6px; padding:6px 14px; margin:4px 0 4px 8px; }
+  .tab.promo:hover { background:color-mix(in srgb, var(--cfw) 18%, transparent); }
+  .tab.promo b { color:var(--cfw); display:inline-flex; align-items:center; gap:3px; margin-left:4px; }
+  .tab.promo svg { width:16px; height:16px; }
+  .links { padding-left:20px; line-height:1.9; }
+  .links a { color:var(--accent); }
+  .cfw-soon { color:var(--cfw); font-size:20px; font-weight:600; margin:28px 0; }
+  .cfw-block { display:none; }
+  body.cfw .cfw-block { display:block; }
+  fieldset.card.cfw-block { margin:0 0 18px; max-width:1100px; border-color:var(--cfw); }
+  fieldset.card.cfw-block legend { color:var(--cfw); font-weight:600; }
+  .cfw-tick { display:none; }
+  body.cfw .cfw-tick { display:inline; color:var(--cfw); }
+  .hint { cursor:help; }
+  .hint i { display:inline-block; width:14px; height:14px; line-height:13px; margin-left:4px; border:1px solid currentColor; border-radius:50%; font-size:10px; font-weight:700; font-style:normal; text-align:center; vertical-align:1px; }
+  .cfw-note { color:var(--cfw); }
+  #ledBox:has(#ledIndNote:not(:empty)) { border:1px solid var(--cfw); border-radius:6px; padding:8px 10px; }   /* the Supernova note, the buttons and the state under the color picker */
+  #ledBox > p { margin:0 0 8px; }
+  #ledBox > p:last-child { margin:8px 0 0; }
+  .banner.cfw-banner { border-color:var(--cfw); }       /* a block that is about a Supernova feature */
+  table.dump-sections td:nth-child(n+2):nth-child(-n+3), table.dump-sections td:nth-last-child(2) { white-space:nowrap; }
+  table.dump-sections .btn.dl { padding:3px 8px; line-height:0; }
+  table.dump-sections .btn.dl svg { margin:0; vertical-align:0; width:16px; height:16px; }
+  .dump-info { columns:2 260px; column-gap:24px; margin-top:10px; }
   details.logbox { margin:18px 0 0; max-width:1100px; }
   .logbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px; margin:6px 0 2px; }
   .logbar .btn { padding:3px 12px; }
@@ -218,6 +286,27 @@
   .switch input:checked + .knob::after { transform:translateX(16px); }
   .switch input:focus-visible + .knob { outline:2px solid var(--accent); outline-offset:2px; }
   details.logbox summary { cursor:pointer; color:var(--muted); }
+  /* The page shown while no device is connected, and while a Supernova device in the IO4-Emulation mode still needs permissions. */
+  body.gate .tabs { display:none; }
+  body.gate .page.active { display:none; }
+  body.gate #page-welcome { display:block; }
+  .welcome { max-width:640px; margin:8vh auto 0; text-align:center; }
+  .welcome-brand { font-size:22px; font-weight:700; letter-spacing:.06em; margin-bottom:28px; }
+  .welcome-brand b { color:var(--accent); }
+  .welcome-brand span { font-weight:400; color:var(--muted); margin-left:8px; letter-spacing:0; }
+  .welcome h1 { font-size:20px; margin:0 0 14px; }
+  .welcome p { color:var(--muted); margin:0 0 20px; }
+  .welcome .btn { padding:9px 26px; }
+  #welcomeSetup { text-align:left; border:1px solid var(--line2); border-radius:8px; padding:18px 22px; background:var(--panel); }
+  #welcomeSetup.io4 { border-color:var(--cfw); }
+  #welcomeSetup h1 { text-align:center; }
+  #welcomeSetup > p { text-align:center; }
+  .setup-row { display:grid; grid-template-columns:1fr auto auto; gap:14px; align-items:center; padding:12px 0; border-top:1px solid var(--line); }
+  .setup-text b { display:block; }
+  .setup-text span { display:block; color:var(--muted); font-size:13px; }
+  .setup-state { font-weight:600; }
+  .setup-state.ok { color:var(--ok); }
+  .setup-state.warn { color:var(--warn); }
 
   #toasts { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; align-items:center; z-index:50; pointer-events:none; }
   .toast { background:var(--panel2); border:1px solid var(--line2); border-radius:6px; padding:8px 14px; box-shadow:0 4px 18px rgba(0,0,0,.35); max-width:80vw; }
@@ -233,16 +322,26 @@
     <button class="tab" data-page="led">LED test</button>
     <button class="tab" data-page="config">Config</button>
     <button class="tab" data-page="flasher">Flasher</button>
+    <button class="tab cfw-only" data-page="dump">Memory dump</button>
+    <button class="tab cfw-only" data-page="io4cfg">IO4 mode config</button>
+    <button class="tab" data-page="links">Useful links</button>
+    <a class="tab promo" id="promoCfw" href="https://github.com/YttrisL/tasoller-plus-custom-firmware" target="_blank" rel="noopener">Unlock new features by installing <b><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.48 12.35c-1.57-4.08-7.16-4.3-5.81-10.23.1-.44-.37-.78-.75-.55C9.29 3.71 6.68 8 8.87 13.62c.18.46-.36.89-.75.59-1.81-1.37-2-3.34-1.84-4.75.06-.52-.62-.77-.91-.34C4.69 10.16 4 11.84 4 14.37c.38 5.6 5.11 7.32 6.81 7.54 2.43.31 5.06-.14 6.95-1.87 2.08-1.93 2.84-5.01 1.72-7.69zM10.2 17.38c1.44-.35 2.18-1.39 2.38-2.31.33-1.43-.96-2.83-.09-5.09.33 1.87 3.27 3.04 3.27 5.08 0 2.53-2.74 4.7-5.56 2.32z"/></svg>Supernova</b></a>
   </nav>
   <div class="conn">
     <button type="button" id="connInfo" class="conninfo" aria-haspopup="true" aria-expanded="false" disabled>
       <span id="connDot" class="dot"></span>
       <span id="connOfficial" class="official" hidden><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l6 2v4.5c0 3.4-2.5 6.1-6 7.5-3.5-1.4-6-4.1-6-7.5V3l6-2zm-1.2 9.6l4-4.2-1-1-3 3.1-1.3-1.3-1 1 2.3 2.4z"/></svg>Official firmware</span>
+      <span id="connCfw" class="official cfw-badge" hidden title="Supernova custom firmware"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.48 12.35c-1.57-4.08-7.16-4.3-5.81-10.23.1-.44-.37-.78-.75-.55C9.29 3.71 6.68 8 8.87 13.62c.18.46-.36.89-.75.59-1.81-1.37-2-3.34-1.84-4.75.06-.52-.62-.77-.91-.34C4.69 10.16 4 11.84 4 14.37c.38 5.6 5.11 7.32 6.81 7.54 2.43.31 5.06-.14 6.95-1.87 2.08-1.93 2.84-5.01 1.72-7.69zM10.2 17.38c1.44-.35 2.18-1.39 2.38-2.31.33-1.43-.96-2.83-.09-5.09.33 1.87 3.27 3.04 3.27 5.08 0 2.53-2.74 4.7-5.56 2.32z"/></svg>Custom firmware</span>
       <span id="connText" class="conn-text">Not connected</span>
     </button>
     <div id="connPop" class="pop" role="dialog" aria-label="Device details" hidden></div>
     <button id="btnConnect" class="btn">Connect</button>
     <button id="btnDisconnect" class="btn plain" hidden>Disconnect</button>
+  </div>
+  <div class="theme" role="group" aria-label="Theme">
+    <button type="button" data-theme-choice="auto" title="Follow the system theme" aria-label="Follow the system theme"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18V4c4.41 0 8 3.59 8 8s-3.59 8-8 8z"/></svg></button>
+    <button type="button" data-theme-choice="light" title="Light theme" aria-label="Light theme"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg></button>
+    <button type="button" data-theme-choice="dark" title="Dark theme" aria-label="Dark theme"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg></button>
   </div>
 </header>
 
@@ -254,6 +353,41 @@
 
 <main>
 
+<!-- ============================ WELCOME ============================ -->
+<section id="page-welcome" class="page" aria-label="Welcome">
+  <div class="welcome">
+    <div class="welcome-brand">TASOLLER<b>+</b><span>Toolkit</span></div>
+    <div id="welcomeOff">
+      <h1>Connect your Tasoller Plus</h1>
+      <p>Plug the device in with a USB cable.<br>Close the official tool and the game if they are running, they use the device.<br>Then press Connect and pick the device in the list of the browser.</p>
+      <button class="btn" id="welcomeConnect">Connect</button>
+      <p class="muted" id="welcomeHint"></p>
+    </div>
+    <div id="welcomeChecking" hidden>
+      <h1>Connecting...</h1>
+      <p>Checking the permissions the browser already has for the device.</p>
+    </div>
+    <div id="welcomeSetup" hidden>
+      <h1 id="setupTitle"><span class="cfw-note">IO4-Emulation mode</span></h1>
+      <p id="setupIntro">The device behaves like the arcade hardware.<br>The Toolkit needs your permission for each part of it: the browser asks for them one at a time.<br>Close the game first, it uses the same ports.</p>
+      <div class="setup-row" id="setupUsb">
+        <div class="setup-text"><b>LED output</b><span>The LED test sends its colors to the device over WebUSB.<br>It is a separate permission, asked once.<br>Close the game first, it uses the same interface.</span></div>
+        <div class="setup-state" id="setupUsbState"></div>
+        <button class="btn" id="setupUsbBtn">Allow the LED output</button>
+      </div>
+      <div class="setup-row" id="setupSerial">
+        <div class="setup-text"><b>Serial ports</b><span id="setupSerialText"></span></div>
+        <div class="setup-state" id="setupSerialState"></div>
+        <button class="btn" id="setupSerialBtn">Allow a serial port</button>
+      </div>
+      <div class="setup-row" id="setupHid">
+        <div class="setup-text"><b>I/O board</b><span id="setupHidText"></span></div>
+        <div class="setup-state" id="setupHidState"></div>
+        <button class="btn" id="setupHidBtn">Allow the I/O board</button>
+      </div>
+    </div>
+  </div>
+</section>
 <!-- ============================ TEST ============================ -->
 <section id="page-test" class="page" aria-label="Input test">
   <div id="testNotice" class="banner warn" hidden></div>
@@ -268,8 +402,8 @@
         </div>
       </div>
       <div class="fn-col">
-        <div class="fn"><span>fn1</span><div class="fn-btn" id="fn1"><span id="fnKey1"></span></div></div>
-        <div class="fn"><span>fn2</span><div class="fn-btn" id="fn2"><span id="fnKey2"></span></div></div>
+        <div class="fn"><span id="fnLabel1">fn1</span><div class="fn-btn" id="fn1"><span id="fnKey1"></span></div></div>
+        <div class="fn"><span id="fnLabel2">fn2</span><div class="fn-btn" id="fn2"><span id="fnKey2"></span></div></div>
       </div>
     </div>
   </div>
@@ -291,12 +425,13 @@
         <div class="led-strip" id="ledStrip" aria-label="Slider LEDs"></div>
         <span class="led-label">Slider: 16 pads and 15 dividers</span>
       </div>
-      <div class="led-tower" id="ledTowerR"><span class="led-label">Right tower</span></div>
+      <div class="led-tower right" id="ledTowerR"><span class="led-label">Right tower</span></div>
     </div>
     <div class="led-controls">
       <div class="led-select">
         <button class="btn plain" id="ledSelAll" type="button">Select all</button>
         <button class="btn plain" id="ledSelNone" type="button">Select none</button>
+        <button class="btn plain" id="ledOff" type="button" title="Turn every zone off">All off</button>
       </div>
       <p class="led-count" id="ledCount">Click a zone to select it, click it again to deselect it. Several zones can be selected at once.</p>
       <div class="field">
@@ -314,12 +449,13 @@
         </div>
       </div>
       <div class="field"><span class="lab">Value</span> <code id="ledHex">#000000</code></div>
-      <div class="row">
-        <button class="btn" id="ledConnect">Connect LED output</button>
-        <button class="btn" id="ledApply" hidden>Show on device</button>
-        <button class="btn plain" id="ledOff" title="Turn every zone off">All off</button>
+      <div id="ledBox">
+        <p class="tips" id="ledIndNote"></p>
+        <div class="row">
+          <button class="btn" id="ledConnect">Connect LED output</button>
+        </div>
+        <p class="tips" id="ledStatus"></p>
       </div>
-      <p class="tips" id="ledStatus">LED output: not connected</p>
     </div>
   </div>
 </section>
@@ -327,6 +463,24 @@
 <!-- ============================ CONFIG ============================ -->
 <section id="page-config" class="page" aria-label="Config">
   <div id="cfgNotice" class="banner warn" hidden></div>
+  <fieldset class="card cfw-block" id="settingsCard">
+    <legend>Settings backup (Supernova):</legend>
+    <div class="card-body">
+      <div>
+        <div class="row">
+          <button class="btn" id="btnSetExport" type="button" disabled>Export settings</button>
+          <button class="btn plain" id="btnSetImport" type="button" disabled>Import settings</button>
+          <input type="file" id="setImportFile" accept=".snvset" hidden>
+        </div>
+      </div>
+      <div class="tips">
+        <div><b>Tips:</b></div>
+        <p><b>Export settings</b> saves everything the device keeps in its settings page to a file: thresholds, key maps, USB mode, brightness, delay and touch tuning.</p>
+        <p><b>Import settings</b> puts such a file back. It replaces all the settings and the device restarts.</p>
+      </div>
+    </div>
+  </fieldset>
+
   <div class="cfg-grid">
     <fieldset class="card">
       <legend>Settings for the sensors thresholds:</legend>
@@ -409,13 +563,14 @@
         <div class="field">
           <span class="lab">Mode: <b id="modeName">-</b> <span class="muted" id="modeCur"></span></span>
           <div class="row"><input type="range" id="sliderMode" min="0" max="4" step="1" value="0"></div>
-          <div class="ticks"><span>WINUSB</span><span>4K</span><span>8K</span><span>16K</span><span>32K</span></div>
+          <div class="ticks"><span>WINUSB</span><span>4K</span><span>8K</span><span>16K</span><span>32K</span><span class="cfw-tick">IO4</span></div>
         </div>
         <button class="btn" id="btnMode" disabled>Switch mode</button>
       </div>
       <div class="tips">
         <div><b>Tips:</b></div>
         <p><b>WINUSB</b> is the mode for the game (chuniio / segatools). The 4K, 8K, 16K and 32K modes make the ground slider type keyboard keys instead.</p>
+        <p class="cfw-block"><b class="cfw-note">Supernova:</b> <b>IO4-Emulation</b> reproduces the way official hardware behaves towards the game. In this mode, there is no need for a custom driver, the game recognizes the device automatically.</p>
         <p>Switching restarts the USB connection: the device disappears and comes back with another USB ID. Press <b>Connect</b> again if the page does not reconnect by itself.</p>
       </div>
     </div>
@@ -528,6 +683,50 @@
  </div>
 </section>
 
+<!-- ============================ DUMP ============================ -->
+<section id="page-dump" class="page" aria-label="Dump">
+ <div class="flash-wrap">
+  <p class="muted">Reads the microcontroller of the controller through the USB command channel: the bootloader and both firmware slots, the settings, the configuration words, the RAM, and the registers as the bootloader left them. <b class="cfw-note">Available with the Supernova custom firmware only.</b></p>
+
+  <h2>1. Device</h2>
+  <div class="box status">
+    <span>Device: <b id="dpDev" class="muted">not connected</b></span>
+    <span>Firmware version: <b id="dpVer" class="muted">-</b></span>
+  </div>
+  <p id="dpHint" class="muted"></p>
+
+  <h2>2. Dump</h2>
+  <p class="muted">Nothing is written to the device. The controller keeps working while it is read, and the dump takes about a minute.</p>
+  <div class="frow">
+    <button id="btnDump" class="btn" disabled>Dump everything</button>
+    <button id="btnDumpAbort" class="btn plain" disabled>Abort</button>
+    <label><input type="checkbox" id="dumpHideUid" checked> Hide my unique chip ID (UID0 to UID2)</label>
+  </div>
+  <progress id="dumpBar" max="100" value="0"></progress>
+  <p id="dumpProgress" class="muted">&nbsp;</p>
+
+  <h2>3. Result</h2>
+  <div id="dumpResult"><p class="muted">Nothing dumped yet.</p></div>
+  <div class="frow"><button id="btnDumpZip" class="btn" disabled>Download all as .zip</button></div>
+  <p class="muted">The zip holds one <code>.bin</code> file per section, <code>manifest.json</code> and <code>info.txt</code>. The unique chip ID identifies your unit: keep it hidden before you share a dump.</p>
+ </div>
+</section>
+<!-- ============================ IO4 MODE CONFIG ============================ -->
+<section id="page-io4cfg" class="page" aria-label="IO4 mode config">
+  <div class="flash-wrap">
+    <p class="muted"><b class="cfw-note">Available with the Supernova custom firmware only.</b></p>
+    <p class="cfw-soon">Coming soon</p>
+  </div>
+</section>
+<!-- ============================ USEFUL LINKS ============================ -->
+<section id="page-links" class="page" aria-label="Useful links">
+  <div class="flash-wrap">
+    <h2>Useful links</h2>
+    <ul class="links">
+      <li><a href="https://github.com/YttrisL/tasoller-plus-custom-firmware" target="_blank" rel="noopener">Supernova, the custom firmware</a><span class="muted"> - source, releases and documentation of the custom firmware for the Tasoller Plus.</span></li>
+    </ul>
+  </div>
+</section>
 <details class="logbox" id="logbox"><summary>Log</summary>
   <div class="logbar">
     <label class="switch"><input type="checkbox" id="detailLogs"><span class="knob"></span><span>Detailed logs</span></label>
@@ -548,15 +747,20 @@ const SHARED_KEY = Uint8Array.from([0x07, 0x08, 0x0C, 0x43, 0x36, 0x57, 0x59, 0x
 const PKG_SIZE = 0x4B000, HEADER_SIZE = 0x19000, SLOT_SIZE = 0x19000, APP_BASE = 0x4000;
 const RAM_BASE = 0x20000000, RAM_END = 0x20028000, VERSION_OFFSET = 0x400, VERSION_SIZE = 0x28;
 const OFFICIAL_VERSION = "SS321_APP_050_20250102";
+const CFW_VERSION_PREFIX = "SS321_CFW_SNV_";            // version string of the Supernova custom firmware (build-tools/build.py)
+const CFW_NAME = "Supernova";                           // its USB product name
 const FRAME = 64, CHUNK = 52;
 const VID = 0x0E8F, PID_UPDATE = 0x1201;
+const IO4_VID = 0x0CA3, IO4_PID = 0x0021;          // the IO4-Emulation mode (Supernova) has the USB ID of the arcade I/O board
 const PID_MODE = { 0x1231: 0, 0x1235: 1, 0x1234: 2, 0x1233: 3, 0x1232: 4 };   // PID -> mode byte of the stock firmware
-const MODE_NAMES = ["WINUSB mode", "4K keyboard mode", "8K keyboard mode", "16K keyboard mode", "32K keyboard mode"];
+const MODE_NAMES = ["WINUSB mode", "4K keyboard mode", "8K keyboard mode", "16K keyboard mode", "32K keyboard mode", "IO4-Emulation mode"];   // the last one is Supernova only, a WinUSB device under another name
 const USAGE_PAGE_CMD = 0xFF00, USAGE_PAGE_STREAM = 0xFF11;
 
 // Command channel commands of the stock firmware (see README)
 const CMD = { HANDSHAKE: 1, VERSION: 2, UPDATE: 4, MODE: 0x27, SENSOR_THR: 0x29, SAVE: 0x2C, GLOBAL_THR: 0x2D, RESTORE: 0x2E,
-              DELAY: 0x32, RESTART_USB: 0x2F, KEYMAP: 0x2A, TOUCH_INFO: 0x08, HW_MAIN: 0x25, HW_TOUCH: 0x26, RESET_BASELINE: 0x35, BRIGHTNESS: 0x36, TUNING: 0x37, FINGER_CAP: 0x09, FINGER_CAP_SET: 0x0A, ERROR: 5 };
+              DELAY: 0x32, RESTART_USB: 0x2F, KEYMAP: 0x2A, TOUCH_INFO: 0x08, HW_MAIN: 0x25, HW_TOUCH: 0x26, RESET_BASELINE: 0x35, BRIGHTNESS: 0x36, TUNING: 0x37, FINGER_CAP: 0x09, FINGER_CAP_SET: 0x0A, ERROR: 5,
+              SAVE_AND_RESET: 0x28,
+              DUMP: 0x40, SETTINGS: 0x41, LED: 0x42 /* Supernova only */ };
 const FINGER_CAP_MIN = 100, FINGER_CAP_MAX = 999;
 const TUNING_COUNT = 18, TUNING_BR_INDEX = 2;          // 18 u16 "tuning" block; the BR slider of the official tool is entry 2
 const THR_MIN = 20, THR_MAX = 130, BR_MIN = 7, BR_MAX = 25, DELAY_MAX = 50, BRIGHT_MIN = 1, BRIGHT_MAX = 100;
@@ -742,6 +946,15 @@ class Link {
     });
   }
 
+  // Send a command the device never answers (it resets while carrying it out).
+  sendNoReply(cmd, payload) {
+    return this.lock(async () => {
+      try { await this.io.send(AES.ecb(this.rk, buildFrame(cmd, randomBytes(1)[0], Uint8Array.from(payload)), true)); }
+      catch (e) { this.log("command 0x" + cmd.toString(16) + ": " + e.message + " (normal if the device already reset)"); }
+      this.shaken = false;
+    });
+  }
+
   async _version() {
     const r = await this._request(2, new Uint8Array(0), 1500, "reading the version");
     const n = Math.max(0, Math.min(r[0] - 2, 58));
@@ -799,8 +1012,10 @@ class TasollerDevice {
   constructor(link) { this.link = link; }
   c(cmd, payload, timeout, what) { return this.link.command(cmd, payload, timeout, what); }
 
-  async getMode() { const p = need(await this.c(CMD.MODE, [0], 2000, "read mode"), 2, "mode"); return p[1]; }
-  async setMode(m) { await this.c(CMD.MODE, [1, clamp(m, 0, 4)], 5000, "set mode"); }
+  // The 0xA5 after the read asks Supernova for the real mode (5 is IO4-Emulation); the official firmware ignores it, and the
+  // official tool, which does not send it, sees IO4-Emulation as WINUSB.
+  async getMode() { const p = need(await this.c(CMD.MODE, [0, 0xA5], 2000, "read mode"), 2, "mode"); return p[1]; }
+  async setMode(m) { await this.c(CMD.MODE, [1, clamp(m, 0, MODE_NAMES.length - 1)], 5000, "set mode"); }
   // Re-enumerates USB with the stored mode. The device may drop off the bus before it answers.
   async restartUsb() { try { await this.c(CMD.RESTART_USB, [], 2000, "restart USB"); } catch (e) { this.link.log("restart USB: " + e.message + " (normal if the device already re-enumerated)"); } }
   // Key map of mode 1..4: 48 bytes, HID usage codes. Entry [p] is the key of firmware sensor p (sensor = 31 - p),
@@ -850,6 +1065,44 @@ class TasollerDevice {
   restoreFactoryThresholds() { return this.c(CMD.RESTORE, [0], 8000, "restore factory thresholds"); }
   resetBaseline() { return this.c(CMD.RESET_BASELINE, [1, 0], 5000, "reset baseline"); }
 
+  // ---- individual tower LEDs (Supernova only, see led_ext.c of the firmware) ----
+  // The three colors (9 bytes: red, green, blue each) of an air tower, 0 left and 1 right: the way the Toolkit lights them in the IO4-Emulation mode.
+  async ledTowers(tower, colors) { await this.c(CMD.LED, [1, tower, ...colors], 2000, "set the tower colors"); }
+  async ledExtInfo() { const p = need(await this.c(CMD.LED, [0], 2000, "LED info"), 3, "LED info"); return { protocol: p[1], towerLeds: p[2] }; }
+
+  // ---- settings backup (Supernova only, see settings_transfer.c of the firmware). Numbers are little endian. ----
+  async settingsInfo() { const p = need(await this.c(CMD.SETTINGS, [0], 2000, "settings info"), 4, "settings info"); return { protocol: p[1], size: p[2] | (p[3] << 8) }; }
+  async settingsRead(offset, n) {
+    const p = need(await this.c(CMD.SETTINGS, [1, offset & 255, offset >> 8, n], 2000, "read settings"), 4 + n, "read settings");
+    if (p[0] !== 1 || (p[1] | (p[2] << 8)) !== offset || p[3] !== n) throw new FlashError("read settings: the reply is for another request");
+    return p.slice(4, 4 + n);
+  }
+  async settingsStage(offset, data) { await this.c(CMD.SETTINGS, [2, offset & 255, offset >> 8, data.length, ...data], 2000, "send settings"); }
+  async settingsCommit(crc) { const p = need(await this.c(CMD.SETTINGS, [3, ...u32le(crc)], 5000, "apply settings"), 2, "apply settings"); return p[1]; }   // 0 done, 1 bad CRC-32, 2 not a settings block
+  saveAndReset() { return this.link.sendNoReply(CMD.SAVE_AND_RESET, []); }
+
+  // ---- chip dump (Supernova only, see dump.c of the firmware). Numbers are little endian. ----
+  async dumpHello() { const p = need(await this.c(CMD.DUMP, [0], 2000, "dump hello"), 4, "dump hello"); return { protocol: p[1], sections: p[2], infos: p[3] }; }
+  async dumpSection(i) {
+    const p = need(await this.c(CMD.DUMP, [1, i], 2000, "dump section " + i), 11, "dump section");
+    return { index: i, mode: String.fromCharCode(p[2]), addr: le32(p, 3), length: le32(p, 7), name: String.fromCharCode(...p.subarray(11)) };
+  }
+  async dumpInfo(i) {
+    const p = need(await this.c(CMD.DUMP, [2, i], 2000, "dump info " + i), 7, "dump info");
+    return { index: i, ok: p[2] === 0, value: le32(p, 3), name: String.fromCharCode(...p.subarray(7)) };
+  }
+  // Up to DUMP_CHUNK bytes of the chip. { refused: true } when the chip will not give them, else { data }.
+  async dumpRead(mode, addr, n) {
+    const p = need(await this.c(CMD.DUMP, [3, mode.charCodeAt(0), ...u32le(addr), n], 2000, "dump read"), 7, "dump read");
+    const where = "0x" + addr.toString(16).toUpperCase().padStart(8, "0");
+    if (p[0] !== 3 || le32(p, 2) !== addr || p[6] !== n) throw new FlashError("dump read at " + where + ": the reply is for another request");
+    if (p[1] !== 0) return { refused: true };
+    need(p, 9 + n, "dump read");
+    const data = p.slice(7, 7 + n);
+    if (crc16(data, crc16(Uint8Array.from(u32le(addr)))) !== (p[7 + n] | (p[8 + n] << 8))) throw new FlashError("dump read at " + where + ": bad checksum");
+    return { data };
+  }
+
   // Read everything the UI shows. A setting that fails to read is left null (and logged by the caller).
   async readAll(onError = () => {}) {
     const r = { fingerCap: null, info: null, keymap: null, mode: null, delay: null, air: null, ground: null, global: null, sensors: null, tuning: null };
@@ -869,6 +1122,170 @@ class TasollerDevice {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Chip dump (Supernova only): read the whole microcontroller over the command channel and pack the
+// result like the dump tool of the dump-and-restore project does (one .bin per section, a manifest, info.txt).
+// ---------------------------------------------------------------------------------------------
+const DUMP_PROTOCOL = 1, DUMP_CHUNK = 48, DUMP_RETRIES = 4;
+class DumpAborted extends Error {}
+
+const CRC32_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(bytes, prev = 0) {          // zlib CRC-32; pass the previous result to continue
+  let c = (prev ^ 0xFFFFFFFF) >>> 0;
+  for (let i = 0; i < bytes.length; i++) c = CRC32_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+const CRC16_TABLE = (() => {
+  const t = new Uint16Array(256);
+  for (let n = 0; n < 256; n++) { let c = n << 8; for (let k = 0; k < 8; k++) c = c & 0x8000 ? ((c << 1) ^ 0x1021) & 0xFFFF : (c << 1) & 0xFFFF; t[n] = c; }
+  return t;
+})();
+function crc16(bytes, crc = 0xFFFF) {      // CRC-16/CCITT-FALSE
+  for (let i = 0; i < bytes.length; i++) crc = ((crc << 8) & 0xFFFF) ^ CRC16_TABLE[((crc >> 8) ^ bytes[i]) & 0xFF];
+  return crc;
+}
+const hex8 = n => (n >>> 0).toString(16).toUpperCase().padStart(8, "0");
+
+// Read the info items and every section. A piece that arrives damaged is asked for again; a piece the chip
+// refuses (the key store always is) stays zero and is listed in `refused`. The sections are objects
+// { name, addr, length, mode, data, refused, retries, verified, crc32, sha256 }.
+async function runDump(dev, { onProgress = () => {}, shouldAbort = () => false, log = () => {}, version = "" } = {}) {
+  const hello = await dev.dumpHello();
+  if (hello.protocol !== DUMP_PROTOCOL) throw new FlashError("the firmware speaks dump protocol " + hello.protocol + ", this page speaks " + DUMP_PROTOCOL);
+  const info = [], sections = [];
+  for (let i = 0; i < hello.infos; i++) info.push(await dev.dumpInfo(i));
+  for (let i = 0; i < hello.sections; i++) sections.push(await dev.dumpSection(i));
+  const total = sections.reduce((s, x) => s + x.length, 0);
+  let done = 0;
+  for (const s of sections) {
+    s.data = new Uint8Array(s.length); s.refused = []; s.retries = 0;
+    for (let off = 0; off < s.length; off += DUMP_CHUNK) {
+      if (shouldAbort()) throw new DumpAborted("aborted");
+      const n = Math.min(DUMP_CHUNK, s.length - off), addr = s.addr + off;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          const r = await dev.dumpRead(s.mode, addr, n);
+          if (r.refused) s.refused.push(addr); else s.data.set(r.data, off);
+          break;
+        } catch (e) {
+          if (!(e instanceof FlashError) || attempt === DUMP_RETRIES) throw e;
+          s.retries++; log("dump: " + e.message + " (attempt " + attempt + " of " + DUMP_RETRIES + ")");
+        }
+      }
+      done += n;
+      if ((off / DUMP_CHUNK) % 8 === 0) onProgress(done, total, s.name);
+    }
+    s.crc32 = crc32(s.data); s.sha256 = (await sha256Hex(s.data)) || "";
+    s.verified = s.refused.length === 0;
+    log("dump: " + s.name + " " + s.length + " bytes, " + (s.verified ? "ok" : s.refused.length + " pieces refused by the chip") + (s.retries ? ", " + s.retries + " retries" : ""));
+  }
+  onProgress(total, total, "");
+  return { version, hello, info, sections, bytes: total };
+}
+
+// info.txt: one "NAME value" line per item. The unique chip ID can be replaced so that the file can be shared.
+function dumpInfoLines(result, hideUid) {
+  const lines = result.version ? ["VERSION " + result.version] : [];
+  for (const it of result.info) lines.push(it.name + " " + (!it.ok ? "ERROR" : hideUid && /^UID[0-9]$/.test(it.name) ? "XXXXXXXX" : hex8(it.value)));
+  return lines;
+}
+
+function makeZip(files) {                  // stored (no compression)
+  const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
+  const now = new Date();
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.data), size = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, size, true); lh.setUint32(22, size, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, f.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true);
+    ch.setUint16(10, 0, true); ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, size, true); ch.setUint32(24, size, true); ch.setUint16(28, name.length, true);
+    ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + size;
+  }
+  let cdSize = 0; for (const c of central) cdSize += c.length;
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+}
+
+function dumpZip(result, hideUid) {
+  const enc = new TextEncoder(), files = [];
+  const manifest = { tool: "tasoller-plus-toolkit", protocol: DUMP_PROTOCOL, firmware: result.version, sections: [] };
+  for (const s of result.sections) {
+    const file = s.name.toLowerCase() + ".bin";
+    files.push({ name: file, data: s.data });
+    manifest.sections.push({ name: s.name, file, address: "0x" + hex8(s.addr), length: s.length, mode: s.mode, verified: s.verified,
+      crc32: s.crc32.toString(16).padStart(8, "0"), sha256: s.sha256, unreadable_lines: s.refused.map(a => "0x" + hex8(a)) });
+  }
+  files.push({ name: "manifest.json", data: enc.encode(JSON.stringify(manifest, null, 2)) });
+  files.push({ name: "info.txt", data: enc.encode(dumpInfoLines(result, hideUid).join("\n") + "\n") });
+  return makeZip(files);
+}
+// ---------------------------------------------------------------------------------------------
+// Settings backup (Supernova only): save the settings block of the device to a file and put it back.
+// The file is: "SNVSET01", the block length (16 bits, little endian), the block, and the CRC-32 of all
+// that comes before it. The block is the one the firmware keeps in flash (see settings_transfer.c).
+// ---------------------------------------------------------------------------------------------
+const SETTINGS_MAGIC = "SNVSET01", SETTINGS_PROTOCOL = 1, SETTINGS_CHUNK = 48;
+const SETTINGS_MARKER_OFFSET = 0x12B, SETTINGS_MARKER = 0x22;     // the byte that tells a valid settings page
+
+async function readSettingsBlock(dev, onProgress = () => {}) {
+  const info = await dev.settingsInfo();
+  if (info.protocol !== SETTINGS_PROTOCOL) throw new FlashError("the firmware speaks settings protocol " + info.protocol + ", this page speaks " + SETTINGS_PROTOCOL);
+  const block = new Uint8Array(info.size);
+  for (let off = 0; off < info.size; off += SETTINGS_CHUNK) {
+    block.set(await dev.settingsRead(off, Math.min(SETTINGS_CHUNK, info.size - off)), off);
+    onProgress(off, info.size);
+  }
+  return block;
+}
+
+function settingsFile(block) {
+  const f = new Uint8Array(8 + 2 + block.length + 4);
+  f.set(Array.from(SETTINGS_MAGIC, c => c.charCodeAt(0)), 0);
+  f[8] = block.length & 255; f[9] = block.length >> 8;
+  f.set(block, 10);
+  f.set(u32le(crc32(f.subarray(0, 10 + block.length))), 10 + block.length);
+  return f;
+}
+
+// The block inside a settings file; throws a FlashError that says what is wrong with the file.
+function parseSettingsFile(bytes) {
+  if (bytes.length < 14 || String.fromCharCode(...bytes.subarray(0, 8)) !== SETTINGS_MAGIC) throw new FlashError("this is not a Supernova settings file");
+  const n = bytes[8] | (bytes[9] << 8);
+  if (bytes.length !== 14 + n) throw new FlashError("the settings file is truncated or has extra data");
+  if (le32(bytes, 10 + n) !== crc32(bytes.subarray(0, 10 + n))) throw new FlashError("the settings file is damaged (its CRC-32 does not match)");
+  const block = bytes.slice(10, 10 + n);
+  if (block[SETTINGS_MARKER_OFFSET] !== SETTINGS_MARKER) throw new FlashError("the file does not hold a valid settings page");
+  return block;
+}
+
+// Send `block` to the device and have it replace the settings. The device still has to be restarted.
+async function writeSettingsBlock(dev, block, onProgress = () => {}) {
+  const info = await dev.settingsInfo();
+  if (info.protocol !== SETTINGS_PROTOCOL) throw new FlashError("the firmware speaks settings protocol " + info.protocol + ", this page speaks " + SETTINGS_PROTOCOL);
+  if (info.size !== block.length) throw new FlashError("the file holds " + block.length + " bytes of settings, this firmware keeps " + info.size + ": it is from another version");
+  for (let off = 0; off < block.length; off += SETTINGS_CHUNK) {
+    await dev.settingsStage(off, block.subarray(off, Math.min(off + SETTINGS_CHUNK, block.length)));
+    onProgress(off, block.length);
+  }
+  const status = await dev.settingsCommit(crc32(block));
+  if (status === 1) throw new FlashError("the device received the settings damaged: nothing was changed");
+  if (status !== 0) throw new FlashError("the device refused the settings: nothing was changed");
+}
+// ---------------------------------------------------------------------------------------------
 // Live data decoder: the stream interface (usage page 0xFF11) sends 64-byte packets.
 //   chip packet: first byte high nibble 0xC,0xD,0xE,0xF = chip 0..3, then 32 big-endian pad values
 //                (the tag replaces the top nibble of the first value). 8 values = 2 sensors x 4 pads.
@@ -881,6 +1298,8 @@ class LiveDecoder {
     this.press = new Uint8Array(32); this.diff = new Uint16Array(32); this.pads = new Uint16Array(128);
     this.buttons = 0; this.rev = 0; this.packets = 0; this.chipSeen = [0, 0, 0, 0]; this.dbtSeen = 0; this.lastAt = 0;
   }
+  // Nothing is coming in any more: show nothing rather than the last values.
+  clear() { this.press.fill(0); this.diff.fill(0); this.buttons = 0; this.rev++; }
   feed(data) {
     const u = data instanceof Uint8Array ? data : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
     for (let off = 0; off + FRAME <= u.length; off += FRAME) this._chunk(u.subarray(off, off + FRAME));
@@ -975,6 +1394,33 @@ function parsePackage(file) {
 // (right to left), 3 LEDs of the left tower, 3 LEDs of the right tower, every LED as R, G, B.
 // ---------------------------------------------------------------------------------------------
 const LED_ENDPOINT = 3, LED_PROTOCOL = 2, LED_PACKET_SIZE = 114;
+// Supernova only: the individual tower LEDs. An extended packet is always 64 bytes: "DX", version, tower (0 left, 1 right),
+// first LED (counted from the bottom of the tower), count, then the colors as R, G, B. The official 114-byte packet is
+// unchanged and is still sent with it (see led_ext.c of the firmware). Ask the firmware first: ledExtInfo().
+const LED_EXT_VERSION = 1, LED_EXT_CHUNK = 12, LED_TOWER_LEDS = 24;
+function buildLedExtPackets(colors) {            // colors[tower * 24 + led from the bottom] = [r, g, b]
+  const out = [];
+  for (let t = 0; t < 2; t++) for (let first = 0; first < LED_TOWER_LEDS; first += LED_EXT_CHUNK) {
+    const p = new Uint8Array(64); p.set([0x44, 0x58, LED_EXT_VERSION, t, first, LED_EXT_CHUNK]);
+    for (let i = 0; i < LED_EXT_CHUNK; i++) p.set(colors[t * LED_TOWER_LEDS + first + i], 6 + 3 * i);
+    out.push(p);
+  }
+  return out;
+}
+// IO4-Emulation mode (Supernova): the LEDs are set the way the game does it. The slider gets the command 2 of its serial protocol
+// (brightness, then 32 colors as blue, red, green; the game and the official packet both count from the right), the
+// towers are set on the command channel (the game uses two LED boards on two more serial ports, which the Toolkit does not need).
+function buildSliderLedFrame(packet) {
+  const body = [2, 97, 63];                                      // command, length, brightness
+  for (let i = 0; i < 32; i++) {
+    const k = i, c = i < 31 ? [packet[3 + 3 * k], packet[4 + 3 * k], packet[5 + 3 * k]] : [0, 0, 0];   // r, g, b
+    body.push(c[2], c[0], c[1]);
+  }
+  let sum = 0xFF; body.forEach(b => { sum = (sum + b) & 255; });
+  const out = [0xFF];
+  for (const b of [...body, (256 - sum) & 255]) { if (b === 0xFF || b === 0xFD) { out.push(0xFD, b - 1); } else out.push(b); }
+  return Uint8Array.from(out);
+}
 function buildLedPacket(slider, left, right) {
   const p = new Uint8Array(LED_PACKET_SIZE); p[0] = 0x44; p[1] = 0x4C; p[2] = LED_PROTOCOL;
   slider.forEach((c, i) => p.set(c, 3 + 3 * i)); left.forEach((c, i) => p.set(c, 96 + 3 * i)); right.forEach((c, i) => p.set(c, 105 + 3 * i));
@@ -993,6 +1439,18 @@ function simDefaultKeymap(entry) {
   for (let i = 0; i < 32; i++) e[i] = entry === 4 ? 4 + (i % 26) : (set.length ? set[Math.floor(i * set.length / 32)] : 0);
   return e;
 }
+
+const SIM_DUMP_SECTIONS = [
+  { name: "SYS", addr: 0x40000000, length: 0x200, mode: "S" }, { name: "CLK", addr: 0x40000200, length: 0x100, mode: "S" },
+  { name: "GPIO", addr: 0x40004000, length: 0x200, mode: "S" }, { name: "SYSTICK", addr: 0xE000E010, length: 0x10, mode: "S" },
+  { name: "NVIC_ISER", addr: 0xE000E100, length: 0x20, mode: "S" }, { name: "SCB", addr: 0xE000ED00, length: 0x40, mode: "S" },
+  { name: "SRAM", addr: 0x20000000, length: 0x400, mode: "M" },        // smaller than the real 160 KiB, to keep the self-test quick
+  { name: "CONFIG", addr: 0x300000, length: 0x10, mode: "I" }, { name: "KPROM", addr: 0x301000, length: 0x10, mode: "I" },
+  { name: "XOM", addr: 0x200000, length: 0x40, mode: "I" }, { name: "OTP", addr: 0x310000, length: 0x800, mode: "I" },
+  { name: "LDROM", addr: 0x100000, length: 0x1000, mode: "M" }, { name: "APROM", addr: 0, length: 0x2000, mode: "M" },
+];
+const SIM_DUMP_INFO = [{ name: "CFG0", value: 0xFFFFFFFD }, { name: "UID0", value: 0x11223344 }, { name: "UID1", value: 0x55667788 }, { name: "UCID0", ok: false }];
+const simChipByte = a => (Math.imul(a >>> 2, 2654435761) >>> (8 * (a & 3))) & 255;
 
 class SimDevice {
   constructor(version = "SS321_APP_050_20250102") {
@@ -1015,8 +1473,8 @@ class SimDevice {
       case 1: this.key = AES.expandKey(AES.ecb(SHARED_RK, p.slice(0, 16), true)); return reply(1, nonce, []);
       case 2: return reply(2, nonce, Array.from(this.version, c => c.charCodeAt(0)));
       case CMD.MODE:
-        if (p[0] === 0) return reply(cmd, nonce, [0, this.mode]);
-        if (p[0] === 1) { if (p[1] > 4) return reply(5, nonce, [1]); this.mode = p[1]; this.saves++; return reply(cmd, nonce, []); }
+        if (p[0] === 0) return reply(cmd, nonce, [0, this.mode === 5 && p[1] !== 0xA5 ? 0 : this.mode]);     // the official tool sees IO4-Emulation as WINUSB
+        if (p[0] === 1) { if (p[1] > (this.version.startsWith(CFW_VERSION_PREFIX) ? 5 : 4)) return reply(5, nonce, [1]); this.mode = p[1]; this.saves++; return reply(cmd, nonce, []); }
         return reply(5, nonce, [1]);
       case CMD.KEYMAP:
         if (p[1] > 5) return reply(5, nonce, [1]);
@@ -1061,6 +1519,13 @@ class SimDevice {
         if (p[0] !== 0) return reply(5, nonce, [1]);
         this.global = [85, 85, 85, 85]; this.sensors = Array.from({ length: 32 }, () => [85, 85, 85, 85]); this.saves++; return reply(cmd, nonce, []);
       case CMD.RESET_BASELINE: this.baselineResets++; return reply(cmd, nonce, []);
+      case CMD.LED:
+        if (!this.version.startsWith(CFW_VERSION_PREFIX)) return reply(5, nonce, [1]);
+        if (p[0] === 1 && p[1] <= 1 && p.length >= 11) { this.towers = this.towers || [[], []]; this.towers[p[1]] = Array.from(p.subarray(2, 11)); return reply(CMD.LED, nonce, [1]); }
+        return p[0] === 0 ? reply(CMD.LED, nonce, [0, LED_EXT_VERSION, LED_TOWER_LEDS]) : reply(5, nonce, [1]);
+      case CMD.SETTINGS: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.settingsCommand(p, nonce, reply) : reply(5, nonce, [1]);
+      case CMD.SAVE_AND_RESET: this.resets = (this.resets || 0) + 1; return null;
+      case CMD.DUMP: return this.version.startsWith(CFW_VERSION_PREFIX) ? this.dump(p, nonce, reply) : reply(5, nonce, [1]);   // only the custom firmware has it
       case 4:
         if (p[0] === 1) { this.size = le32(p, 1); this.slot.fill(0xFF); this.started = true; return reply(4, nonce, []); }
         if (p[0] === 2) {
@@ -1071,6 +1536,55 @@ class SimDevice {
         if (p[0] === 3) return sum8(this.slot, 0, this.size) === p[1] ? (this.trigger = true, reply(4, nonce, [])) : reply(5, nonce, [5]);
         if (p[0] === 4) { this.rebooted = true; return null; }
         return reply(5, nonce, [1]);
+      default: return reply(5, nonce, [1]);
+    }
+  }
+  // The settings backup of the custom firmware (same layout as settings_transfer.c).
+  settingsCommand(p, nonce, reply) {
+    const SIZE = 0x2DB, off = p[1] | (p[2] << 8), n = p[3];
+    if (!this.settingsBlock) { this.settingsBlock = Uint8Array.from({ length: SIZE }, (_, i) => (i * 5 + 1) & 255); this.settingsBlock[SETTINGS_MARKER_OFFSET] = SETTINGS_MARKER; this.staging = new Uint8Array(SIZE); }
+    switch (p[0]) {
+      case 0: return reply(CMD.SETTINGS, nonce, [0, SETTINGS_PROTOCOL, SIZE & 255, SIZE >> 8]);
+      case 1: {
+        const o = p[1] | (p[2] << 8), len = p[3];
+        if (!len || len > SETTINGS_CHUNK || o + len > SIZE) return reply(5, nonce, [1]);
+        return reply(CMD.SETTINGS, nonce, [1, p[1], p[2], len, ...this.settingsBlock.subarray(o, o + len)]);
+      }
+      case 2:
+        if (!n || n > SETTINGS_CHUNK || off + n > SIZE) return reply(5, nonce, [1]);
+        this.staging.set(p.subarray(4, 4 + n), off); return reply(CMD.SETTINGS, nonce, [2, 0]);
+      case 3: {
+        if (le32(p, 1) !== crc32(this.staging)) return reply(CMD.SETTINGS, nonce, [3, 1]);
+        if (this.staging[SETTINGS_MARKER_OFFSET] !== SETTINGS_MARKER) return reply(CMD.SETTINGS, nonce, [3, 2]);
+        this.settingsBlock = this.staging.slice(); this.saves++; return reply(CMD.SETTINGS, nonce, [3, 0]);
+      }
+      default: return reply(5, nonce, [1]);
+    }
+  }
+  // The chip dump of the custom firmware (same layout as dump.c). The "chip" is made of a repeatable noise.
+  dump(p, nonce, reply) {
+    const sections = SIM_DUMP_SECTIONS, put32 = v => u32le(v), name = t => Array.from(t, c => c.charCodeAt(0));
+    switch (p[0]) {
+      case 0: return reply(CMD.DUMP, nonce, [0, DUMP_PROTOCOL, sections.length, SIM_DUMP_INFO.length]);
+      case 1: {
+        const s = sections[p[1]]; if (!s) return reply(5, nonce, [1]);
+        return reply(CMD.DUMP, nonce, [1, p[1], s.mode.charCodeAt(0), ...put32(s.addr), ...put32(s.length), ...name(s.name)]);
+      }
+      case 2: {
+        const it = SIM_DUMP_INFO[p[1]]; if (!it) return reply(5, nonce, [1]);
+        return reply(CMD.DUMP, nonce, [2, p[1], it.ok === false ? 1 : 0, ...put32(it.ok === false ? 0 : it.value), ...name(it.name)]);
+      }
+      case 3: {
+        const mode = String.fromCharCode(p[1]), addr = le32(p, 2), n = p[6];
+        if (n < 4 || n > DUMP_CHUNK || n % 4 || addr % 4 || !["M", "I", "S"].includes(mode)) return reply(5, nonce, [1]);
+        this.dumpReads = (this.dumpReads || 0) + 1;
+        const head = [3, 0, ...put32(addr), n];
+        if (mode === "I" && addr >= 0x301000 && addr < 0x301010) { head[1] = 1; return reply(CMD.DUMP, nonce, head); }    // the key store is refused
+        const data = Uint8Array.from({ length: n }, (_, i) => simChipByte(addr + i));
+        const crc = crc16(data, crc16(Uint8Array.from(put32(addr))));
+        if (this.dumpCorrupt > 0) { this.dumpCorrupt--; data[0] ^= 0x55; }          // damaged on the way: the host has to ask again
+        return reply(CMD.DUMP, nonce, [...head, ...data, crc & 255, crc >> 8]);
+      }
       default: return reply(5, nonce, [1]);
     }
   }
@@ -1179,6 +1693,61 @@ async function selfTest() {
   const lp = buildLedPacket(Array.from({ length: 31 }, (_, i) => [i, 1, 2]), [[10, 11, 12], [13, 14, 15], [16, 17, 18]], [[20, 21, 22], [23, 24, 25], [26, 27, 28]]);
   if (lp.length !== 114 || lp[0] !== 0x44 || lp[1] !== 0x4C || lp[2] !== 2 || lp[3 + 3 * 30] !== 30 || lp[96] !== 10 || lp[105] !== 20 || lp[113] !== 28) throw new Error("LED packet layout failed");
 
+  // the chip dump of the custom firmware: a damaged piece is asked for again, a refused one is listed
+  const sim4 = new SimDevice(CFW_VERSION_PREFIX + "TEST"), dev4 = new TasollerDevice(mkLink(sim4));
+  sim4.dumpCorrupt = 2;
+  const dump = await runDump(dev4, { version: CFW_VERSION_PREFIX + "TEST" });
+  const kprom = dump.sections.find(s => s.name === "KPROM"), apr = dump.sections.find(s => s.name === "APROM");
+  if (dump.sections.length !== SIM_DUMP_SECTIONS.length || dump.bytes !== SIM_DUMP_SECTIONS.reduce((n, s) => n + s.length, 0)) throw new Error("dump sections failed");
+  if (!kprom || kprom.verified || kprom.refused.length !== 1 || !apr.verified || apr.data[0x1001 & 0x1FFF] !== simChipByte(0x1001) || dump.sections.reduce((n, s) => n + s.retries, 0) !== 2) throw new Error("dump content failed");
+  if (dumpInfoLines(dump, true).join() !== "VERSION " + CFW_VERSION_PREFIX + "TEST,CFG0 FFFFFFFD,UID0 XXXXXXXX,UID1 XXXXXXXX,UCID0 ERROR" || dumpInfoLines(dump, false)[2] !== "UID0 11223344") throw new Error("dump info failed");
+  if (crc32(new TextEncoder().encode("123456789")) !== 0xCBF43926 || crc16(new TextEncoder().encode("123456789")) !== 0x29B1) throw new Error("dump checksums failed");
+  if ((await dumpZip(dump, true).arrayBuffer()).byteLength < dump.bytes) throw new Error("dump zip failed");
+  let noDump = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).dumpHello(); } catch (e) { noDump = e instanceof FlashError; }
+  if (!noDump) throw new Error("the stock firmware must not answer the dump command");
+
+  // the settings backup: export, damage and refusal of a file, import
+  const dev5 = new TasollerDevice(mkLink(sim4));
+  const saved = await readSettingsBlock(dev5), file = settingsFile(saved);
+  if (saved.length !== 0x2DB || hex(parseSettingsFile(file)) !== hex(saved)) throw new Error("settings export failed");
+  const changed = saved.slice(); changed[100] ^= 0xFF; changed[SETTINGS_MARKER_OFFSET] = SETTINGS_MARKER;
+  await writeSettingsBlock(dev5, changed);
+  if (hex(await readSettingsBlock(dev5)) !== hex(changed)) throw new Error("settings import failed");
+  await writeSettingsBlock(dev5, saved); if (hex(await readSettingsBlock(dev5)) !== hex(saved)) throw new Error("settings restore failed");
+  const bad = [file.slice(0, 20), file.map((b, i) => i === 50 ? b ^ 1 : b), file.map((b, i) => i === 0 ? 0x58 : b), settingsFile(saved.map((b, i) => i === SETTINGS_MARKER_OFFSET ? 0 : b))];
+  for (const b of bad) { let refused = false; try { parseSettingsFile(b); } catch (e) { refused = e instanceof FlashError; } if (!refused) throw new Error("a bad settings file was accepted"); }
+  let noSettings = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).settingsInfo(); } catch (e) { noSettings = e instanceof FlashError; }
+  if (!noSettings) throw new Error("the stock firmware must not answer the settings command");
+
+  // the IO4-Emulation mode: only Supernova accepts it, and the official tool's plain read sees WINUSB
+  const sim6 = new SimDevice(CFW_VERSION_PREFIX + "TEST"), l6 = mkLink(sim6), dev6 = new TasollerDevice(l6);
+  await dev6.setMode(5);
+  if ((await dev6.getMode()) !== 5 || (await l6.command(CMD.MODE, [0], 2000))[1] !== 0 || MODE_USB[5].vendorId !== 0x0CA3 || MODE_USB[5].productId !== 0x0021) throw new Error("IO4-Emulation mode failed");
+  let stock5 = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).setMode(5); } catch (e) { stock5 = e instanceof FlashError; }
+  if (!stock5) throw new Error("the stock firmware must refuse the IO4-Emulation mode");
+
+  // the LEDs in the IO4-Emulation mode: the slider frame is what the firmware's parser takes, colors land on the right LED
+  const dl = buildLedPacket(Array.from({ length: 31 }, (_, k) => [k === 0 ? 0xFF : k, k === 1 ? 0xFD : 100 + k, 7]), [[9, 8, 7], [9, 8, 7], [9, 8, 7]], [[9, 8, 7], [9, 8, 7], [9, 8, 7]]);
+  const frame = buildSliderLedFrame(dl), raw = []; let esc = false;
+  for (const b of frame) { if (b === 0xFD) { esc = true; continue; } raw.push(esc ? b + 1 : b); esc = false; }
+  if (raw[0] !== 0xFF || raw[1] !== 2 || raw[2] !== 97 || raw.length !== 3 + 97 + 1 || raw.reduce((a, b) => (a + b) & 255, 0) !== 0) throw new Error("slider LED frame failed");
+  if (raw[3 + 1] !== 7 || raw[3 + 1 + 1] !== 0xFF || raw[3 + 1 + 2] !== 100 || raw[3 + 1 + 3 + 2] !== 0xFD) throw new Error("slider LED colors failed");     // k = 0 is the first color of the frame, the rightmost LED: blue, red, green
+  await dev4.ledTowers(1, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  if (sim4.towers[1].join() !== "1,2,3,4,5,6,7,8,9") throw new Error("tower colors failed");
+
+  // the individual tower LEDs: the packets cover every LED once, keep the 64 byte size that sets them apart from the official packet
+  const towerColors = Array.from({ length: 48 }, (_, i) => [i + 1, 100 + i, 200 - i]), ext = buildLedExtPackets(towerColors), seen = new Set();
+  if (ext.length !== 4 || ext.some(p => p.length !== 64 || p[0] !== 0x44 || p[1] !== 0x58 || p[2] !== LED_EXT_VERSION)) throw new Error("extended LED packet layout failed");
+  for (const p of ext) for (let i = 0; i < p[5]; i++) { const key = p[3] * 24 + p[4] + i; if (seen.has(key) || hex(p.subarray(6 + 3 * i, 9 + 3 * i)) !== hex(Uint8Array.from(towerColors[key]))) throw new Error("extended LED packet content failed"); seen.add(key); }
+  if (seen.size !== 48) throw new Error("extended LED packets do not cover every LED");
+  if ((await dev4.ledExtInfo()).towerLeds !== 24) throw new Error("LED info failed");
+  let noLedExt = false;
+  try { await new TasollerDevice(mkLink(new SimDevice())).ledExtInfo(); } catch (e) { noLedExt = e instanceof FlashError; }
+  if (!noLedExt) throw new Error("the stock firmware must not answer the LED command");
+
   // a whole update against a simulated device, and a version mismatch is refused
   const image = new Uint8Array(3001).map((_, i) => (i * 7 + 3) & 255);
   const sim3 = new SimDevice("SS321_APP_TEST"), l3 = mkLink(sim3);
@@ -1200,9 +1769,16 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const app = {
   page: "test", conn: null, cfg: null, busy: 0, flashing: false, sel: 0,
   live: new LiveDecoder(), streaming: false, streamTimer: null, lastStreamKick: 0,
-  hideDiff: false, hideThr: false, wasFlashed: false, switching: false,
+  hideDiff: false, hideThr: false, wasFlashed: false, switching: false, installCfw: false,
 };
-// conn = { cmdDev, streamDev, io, streamIo, link, api, demo, pid, version, mode, update }
+// conn = { cmdDev, streamDev, io, streamIo, link, api, demo, pid, version, mode, update, cfw }
+// conn.cfw is true when the device runs the Supernova custom firmware. Use isCfw() to test it; while the
+// device is connected the page also has the "cfw" class on <body>, so CSS can show CFW-only menus.
+const isIo4 = () => !!(app.conn && app.conn.cmdDev && app.conn.cmdDev.vendorId === IO4_VID);
+const isCfw = () => !!(app.conn && app.conn.cfw);
+function detectCfw(version, productName, demo) {
+  return !demo && (String(version || "").startsWith(CFW_VERSION_PREFIX) || String(productName || "").startsWith(CFW_NAME));
+}
 
 const logLines = []; let showDetail = false;
 function renderLog() {
@@ -1225,14 +1801,17 @@ const hid = () => ("hid" in navigator) ? navigator.hid : null;
 // pages
 // ------------------------------------------------------------------------------------------------
 function showPage(name) {
-  if (!["test", "led", "config", "flasher"].includes(name)) name = "test";
+  if (!["test", "led", "config", "flasher", "dump", "io4cfg", "links"].includes(name) || ((name === "dump" || name === "io4cfg") && !dumpAvailable())) name = "test";      // the Supernova pages need Supernova
   app.page = name;
   document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + name));
   document.querySelectorAll(".tab").forEach(t => { if (t.dataset.page === name) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current"); });
   try { history.replaceState(null, "", "#" + name); } catch (e) {}
   updateStream();
   if (name !== "led" && typeof ledStop === "function" && led.timer) ledStop();
+  if (name !== "led" && typeof ledDisconnect === "function" && led.dev && led.dev.io4) ledDisconnect();      // the Input test needs the slider port
   if (name === "config" && app.conn && !app.conn.update) refreshConfig();
+  if (name === "dump") updateDump();
+  if (name === "led") { if (led.dev) ledStart(); else ledAutoConnect(); }
 }
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => showPage(t.dataset.page));
 
@@ -1284,21 +1863,28 @@ const hexId = d => "0x" + d.vendorId.toString(16).toUpperCase().padStart(4, "0")
 
 function connectFilters(all) {
   if (all) return [];
-  return [...Object.keys(PID_MODE).map(p => ({ vendorId: VID, productId: Number(p) })), { vendorId: VID, productId: PID_UPDATE }];
+  return [...Object.keys(PID_MODE).map(p => ({ vendorId: VID, productId: Number(p) })), { vendorId: VID, productId: PID_UPDATE }, MODE_USB[5]];
 }
 
-const MODE_PID = { 0: 0x1231, 1: 0x1235, 2: 0x1234, 3: 0x1233, 4: 0x1232 };
+// What the browser is asked for after a mode switch. The IO4-Emulation mode (Supernova) is a composite device: only its command channel is of interest.
+const MODE_USB = {
+  0: { vendorId: VID, productId: 0x1231 }, 1: { vendorId: VID, productId: 0x1235 }, 2: { vendorId: VID, productId: 0x1234 },
+  3: { vendorId: VID, productId: 0x1233 }, 4: { vendorId: VID, productId: 0x1232 },
+  5: { vendorId: IO4_VID, productId: IO4_PID, usagePage: USAGE_PAGE_CMD },
+};
+// The interfaces of the IO4-Emulation device that are not the command channel (the I/O board and the serial port) are of no use here.
+const isVendorChannel = d => (d.collections || []).some(c => c.usagePage === USAGE_PAGE_CMD || c.usagePage === USAGE_PAGE_STREAM);
 
 // The browser only reconnects by itself to devices it already has permission for. After a mode switch the
 // device comes back with another USB ID, which is a new device for the browser: one click on Reconnect
 // (the chooser then only offers that device) grants it, and the page continues from there.
-function showReconnect(msg, pid) { app.reconnectPid = pid || null; $("reconnectMsg").textContent = msg; $("reconnectBar").hidden = false; updateButtons(); updateStream(); }
+function showReconnect(msg, filter) { app.reconnectPid = filter || null; $("reconnectMsg").textContent = msg; $("reconnectBar").hidden = false; updateButtons(); updateStream(); }
 $("btnReconnect").onclick = () => connectReal(app.reconnectPid);
 
-async function connectReal(pid) {
+async function connectReal(filter) {
   if (!hid()) { toast("This browser has no WebHID", "bad"); return; }
   let devs;
-  try { devs = await hid().requestDevice({ filters: pid ? [{ vendorId: VID, productId: pid }] : connectFilters(false) }); }
+  try { devs = await hid().requestDevice({ filters: filter ? [filter] : connectFilters(false) }); }
   catch (e) { log("not connected: " + e.message); return; }
   if (!devs.length) { log("no device chosen"); return; }
   // Other interfaces of the same device that were authorised earlier (for example the live data one)
@@ -1310,7 +1896,7 @@ async function connectReal(pid) {
 async function autoConnect() {
   if (!hid() || app.conn) return;
   let known = []; try { known = await hid().getDevices(); } catch (e) { return; }
-  known = known.filter(d => d.vendorId === VID && (d.productId === PID_UPDATE || d.productId in PID_MODE));
+  known = known.filter(d => (d.vendorId === VID && (d.productId === PID_UPDATE || d.productId in PID_MODE)) || (d.vendorId === IO4_VID && d.productId === IO4_PID));
   if (known.length) { log("reconnecting to an authorised device"); await adopt(known); }
 }
 
@@ -1332,7 +1918,7 @@ async function openDev(d) {
 async function adoptInner(devs, demo) {
   if (app.conn) await teardown(true);
   for (const d of devs) log("HID interface " + hexId(d) + ": " + describeCollections(d).text.join(" | "));
-  const cands = devs.filter(hasOutput);
+  const cands = devs.filter(d => hasOutput(d) && (d.vendorId !== IO4_VID || isVendorChannel(d)));
   if (!cands.length) { toast("No usable HID interface on that device.", "bad"); log("no HID interface with an output report among: " + devs.map(hexId).join(", ")); return; }
   try { for (const d of cands) await openDev(d); }
   catch (e) {
@@ -1359,16 +1945,31 @@ async function adoptInner(devs, demo) {
   const update = cmdDev.productId === PID_UPDATE;
   const streamDev = update ? null : (cands.find(d => d !== cmdDev) || null);
   for (const d of cands) if (d !== cmdDev && d !== streamDev) { try { await d.close(); } catch (e) {} }
-  const conn = { cmdDev, streamDev, io, link, api: new TasollerDevice(link), demo: !!demo, pid: cmdDev.productId, version, mode: null, update };
+  const conn = { cmdDev, streamDev, io, link, api: new TasollerDevice(link), demo: !!demo, pid: cmdDev.productId, version, mode: null, update, cfw: detectCfw(version, cmdDev.productName, demo) };
   if (streamDev) conn.streamIo = makeStreamListener(streamDev);
   app.conn = conn;
   log("opened " + (demo ? "simulated device" : hexId(cmdDev) + " " + (cmdDev.productName || "")) + (streamDev ? " + live data interface" : " (no live data interface)"));
-  log("handshake ok, version: " + version);
-  if (conn.pid in PID_MODE) conn.mode = PID_MODE[conn.pid];
+  log("handshake ok, version: " + version + (conn.cfw ? " (Supernova custom firmware)" : ""));
+  if (cmdDev.vendorId === IO4_VID) conn.mode = 5;
+  else if (conn.pid in PID_MODE) conn.mode = PID_MODE[conn.pid];
   setConnUI("on"); $("reconnectBar").hidden = true; app.wasFlashed = false;
+  if ((app.installCfw || load("installCfw") === "1") && conn.cfw && !conn.update) {        // Supernova was just installed with the Flasher: IO4-Emulation is the mode it starts in, also when the device had been in another mode with an earlier Supernova
+    app.installCfw = false; store("installCfw", "0");
+    if (conn.mode !== 5) {
+      try {
+        log("Supernova installed: switching to the IO4-Emulation mode");
+        await conn.api.setMode(5);
+        app.switching = true; app.switchPid = MODE_USB[5];
+        toast("Supernova installed. Switching to the IO4-Emulation mode...", "ok");
+        await conn.api.restartUsb();
+        return;
+      } catch (e) { app.switching = false; log("could not switch to the IO4-Emulation mode: " + e.message); toast("Could not switch to the IO4-Emulation mode: " + e.message, "bad"); }
+    }
+  }
   if (!conn.update) { await refreshConfig(true); }
   updateStream();
   updateButtons();
+  gateProbe();
 }
 
 function makeStreamListener(dev) {
@@ -1382,11 +1983,13 @@ function makeStreamListener(dev) {
 
 async function teardown(quiet) {
   const c = app.conn; if (!c) return;
+  if (led.dev && led.dev.io4) await ledDisconnect();
   await stopStream();
   app.conn = null; app.cfg = null; app.live.reset();
   try { c.io.close(); } catch (e) {}
   try { c.streamIo && c.streamIo.close(); } catch (e) {}
-  for (const d of [c.cmdDev, c.streamDev]) { if (d) { try { await d.close(); } catch (e) {} } }
+  if (c.io4Hid) { try { c.io4Hid.removeEventListener("inputreport", io4HidReport); } catch (e) {} }
+  for (const d of [c.cmdDev, c.streamDev, c.io4Hid]) { if (d) { try { await d.close(); } catch (e) {} } }
   setConnUI("off");
   buildGrid(0); updateButtons(); renderConfig();
   if (!quiet) log("disconnected");
@@ -1412,17 +2015,20 @@ function onDeviceGone(dev) {
 function setConnUI(state) {
   const c = app.conn, dot = $("connDot"), txt = $("connText");
   $("connHelp").hidden = !!(c && state !== "off");
-  dot.className = "dot"; $("connOfficial").hidden = true; dot.hidden = false;
+  dot.className = "dot"; $("connOfficial").hidden = true; $("connCfw").hidden = true; dot.hidden = false;
+  document.body.classList.toggle("cfw", !!(c && state !== "off" && c.cfw));
+  document.body.classList.toggle("fw-official", !!(c && state !== "off" && c.version === OFFICIAL_VERSION && !c.demo));
   if (state === "off" || !c) {
     txt.textContent = "Not connected"; $("connInfo").disabled = true; $("connPop").hidden = true; $("btnConnect").hidden = false; $("btnDisconnect").hidden = true;
     $("stDev").textContent = "not connected"; $("stDev").className = "muted"; $("stVer").textContent = "-"; $("stVer").className = "muted";
-    document.body.classList.add("test-off"); return;
+    document.body.classList.add("test-off"); updateGate(); return;
   }
   $("btnConnect").hidden = true; $("btnDisconnect").hidden = false;
   const name = c.demo ? "Simulated Tasoller Plus" : (c.cmdDev.productName || "Tasoller Plus") + " (" + hexId(c.cmdDev) + ")";
   if (state === "busy") { txt.textContent = "Connecting to " + name + "..."; dot.classList.add("warn"); $("connInfo").disabled = true; return; }
   dot.classList.add(c.demo ? "demo" : "on");
   if (c.version === OFFICIAL_VERSION && !c.demo) { dot.hidden = true; $("connOfficial").hidden = false; }
+  else if (c.cfw) { dot.hidden = true; $("connCfw").hidden = false; }
   const mode = c.update ? "update mode" : (c.mode != null ? MODE_NAMES[c.mode] : "");
   const shortName = c.demo ? "Demo (simulated)" : (c.cmdDev.productName || "Tasoller Plus");
   txt.textContent = shortName; $("connInfo").disabled = false;
@@ -1440,6 +2046,7 @@ function setConnUI(state) {
   $("stDev").textContent = name + (c.update ? " - update mode" : ""); $("stDev").className = "ok";
   $("stVer").textContent = c.version || "(empty)"; $("stVer").className = c.version.includes("SS321") ? "ok" : "warn";
   document.body.classList.toggle("test-off", !c.streamDev || c.update);
+  updateGate();
 }
 
 function updateButtons() {
@@ -1452,14 +2059,17 @@ function updateButtons() {
   ["btnHideDiff", "btnHideThr"].forEach(id => { $(id).disabled = upd; });
   $("advClose").disabled = upd;
   if (upd) { $("btnMode").disabled = true; $("advPanel").hidden = true; }
-  $("ledUpdateNote").hidden = !upd; $("ledConnect").disabled = upd; $("ledApply").disabled = upd; $("ledOff").disabled = upd;
+  $("ledUpdateNote").hidden = !upd; $("ledConnect").disabled = upd; $("ledOff").disabled = upd;
   if (upd && led.timer) ledStop();
   ["sliderAll", "numAll", "sliderMode", "sliderBR", "sliderDelay", "numDelay", "sliderGround", "sliderAir", "btnRestore", "btnAdvanced",
-    "dbgFinger", "dbgFingerApply", "dbgBaseline", "dbgNoise", "dbgIir", "dbgReset", "keyRestore"].forEach(id => { $(id).disabled = !cfgOn; });
+    "btnSetExport", "btnSetImport", "dbgFinger", "dbgFingerApply", "dbgBaseline", "dbgNoise", "dbgIir", "dbgReset", "keyRestore"].forEach(id => { $(id).disabled = !cfgOn; });
   $("btnDebug").disabled = upd; if (upd) { $("debugCard").hidden = true; $("keyCard").hidden = true; }
   document.querySelectorAll("#keyRows button").forEach(b => { b.disabled = !cfgOn; });
   $("keyClear").disabled = !cfgOn || !keymap.target;
   disableMissing();
+  updateDump();
+  updateLedExt();
+  renderFnLabels();
   document.querySelectorAll("#advPanel input, #advPanel button").forEach(el => { if (el.id !== "advClose") el.disabled = !cfgOn; });
   const notice = $("cfgNotice");
   if (!c) { notice.hidden = !$("reconnectBar").hidden; notice.textContent = "Not connected. Use Connect in the top bar to read and change the settings."; }
@@ -1500,7 +2110,7 @@ function renderConfig() {
   if (ok("delay")) { setRange($("sliderDelay"), clamp(r.delay, 0, DELAY_MAX)); $("numDelay").value = r.delay; }
   if (ok("ground")) { setRange($("sliderGround"), clamp(r.ground, BRIGHT_MIN, BRIGHT_MAX)); $("valGround").textContent = r.ground; }
   if (ok("air")) { setRange($("sliderAir"), clamp(r.air, BRIGHT_MIN, BRIGHT_MAX)); $("valAir").textContent = r.air; }
-  if (ok("mode")) { setRange($("sliderMode"), clamp(r.mode, 0, 4)); $("modeName").textContent = MODE_NAMES[clamp(r.mode, 0, 4)]; $("modeCur").textContent = "(current)"; $("btnMode").disabled = true; }
+  if (ok("mode")) { $("sliderMode").max = isCfw() ? MODE_NAMES.length - 1 : MODE_NAMES.length - 2; setRange($("sliderMode"), clamp(r.mode, 0, 5)); $("modeName").textContent = MODE_NAMES[clamp(r.mode, 0, 5)]; $("modeCur").textContent = "(current)"; $("btnMode").disabled = true; }
   disableMissing();
   renderKeyCard(); renderDebug();
 }
@@ -1625,7 +2235,7 @@ $("btnMode").onclick = async () => {
     if (back !== m) throw new Error("the device reports mode " + back);
     r.mode = back;
     if (c.demo) { await c.api.restartUsb(); c.mode = back; setConnUI("on"); await refreshConfig(); toast("Mode switched (simulated)", "ok"); return; }
-    app.switching = true; app.switchPid = MODE_PID[m];
+    app.switching = true; app.switchPid = MODE_USB[m];
     toast("Mode saved. Restarting USB...", "ok");
     await c.api.restartUsb();
   });
@@ -1750,11 +2360,17 @@ function frameLoop() { renderLive(false); requestAnimationFrame(frameLoop); }
 const START_FRAME = () => { const f = new Uint8Array(64); f.set([0x68, 0xDD, 0xC8]); return f; };
 const STOP_FRAME = () => { const f = new Uint8Array(64); f.set([0x68, 0xBB, 0xF8]); return f; };
 
-function wantStream() { const c = app.conn; return !!(c && c.streamDev && !c.update && !app.flashing && (app.page === "test" || (app.page === "config" && !$("advPanel").hidden))); }
+function wantStream() { const c = app.conn; return !!(c && !document.body.classList.contains("gate") && (c.streamDev || (isIo4() && c.serialPort)) && !c.update && !app.flashing && !app.dumping && (app.page === "test" || (app.page === "config" && !$("advPanel").hidden))); }
 async function updateStream() {
   const c = app.conn, notice = $("testNotice");
+  notice.classList.remove("cfw-banner");
   if (!c) { notice.hidden = !$("reconnectBar").hidden; notice.innerHTML = "Not connected. Use <b>Connect</b> in the top bar to see the live sensors."; $("streamInfo").textContent = "Live data: not connected"; return; }
   if (c.update) { notice.hidden = false; notice.textContent = "The device is in update mode: there is no live data. Restart it normally or use the Flasher."; $("streamInfo").textContent = "Live data: unavailable"; return; }
+  if (isIo4()) {                      // no stream interface: the slider serial port and the I/O board instead
+    if (!(await io4UpdateStream(c, notice))) return;
+    if (wantStream()) await startStream(); else await stopStream();
+    return;
+  }
   if (!c.streamDev) {
     notice.hidden = false;
     notice.innerHTML = 'The live data interface of the device is not authorised yet. <button class="btn" id="btnAllowLive">Allow live data</button>';
@@ -1776,8 +2392,14 @@ async function allowLive() {
   setConnUI("on"); updateStream();
 }
 async function startStream() {
-  const c = app.conn; if (!c || !c.streamDev || app.streaming) return;
+  const c = app.conn; if (!c || (!c.streamDev && !(isIo4() && c.serialPort)) || app.streaming) return;
   app.streaming = true; app.lastStreamKick = performance.now();
+  if (isIo4()) {
+    if (!(await io4StartSerial())) { app.streaming = false; return; }
+    log("live data started (slider serial port)");
+    clearInterval(app.streamTimer); app.streamTimer = setInterval(streamWatch, 500);
+    return;
+  }
   try { await c.streamDev.sendReport(0, START_FRAME()); log("live data started"); }
   catch (e) { app.streaming = false; log("could not start live data: " + e.message); toast("Could not start live data: " + e.message, "bad"); return; }
   clearInterval(app.streamTimer);
@@ -1788,7 +2410,9 @@ async function stopStream() {
   const c = app.conn;
   if (!app.streaming) return;
   app.streaming = false; $("streamInfo").textContent = "Live data: stopped";
+  if (isIo4()) { await io4StopSerial(); log("live data stopped"); app.live.clear(); return; }
   if (c && c.streamDev) { try { await c.streamDev.sendReport(0, STOP_FRAME()); log("live data stopped"); } catch (e) {} }
+  app.live.clear();
 }
 let lastCount = 0, lastTick = 0;
 function streamWatch() {
@@ -1798,14 +2422,202 @@ function streamWatch() {
   if (!app.streaming) { info.textContent = "Live data: stopped"; return; }
   if (L.packets === 0 || now - L.lastAt > 1500) {
     info.textContent = "Live data: waiting for packets...";
+    if (L.packets > 0) L.clear();                       // the last values would only look like a state of the device
     if (now - app.lastStreamKick > 3000 && app.conn && app.conn.streamDev) {   // ask again, in case the first request was lost
       app.lastStreamKick = now; app.conn.streamDev.sendReport(0, START_FRAME()).catch(() => {});
     }
     return;
   }
+  if (isIo4()) { info.textContent = "Live data: receiving from the slider port (" + Math.round(rate) + " reports/s" + (app.conn.io4Hid ? ", air beams and buttons from the I/O board)" : ")"); return; }
   info.textContent = "Live data: receiving (" + Math.round(rate) + " packets/s, chips " + L.chipSeen.map(x => x > 0 ? "ok" : "-").join(" ") + ", buttons " + (L.dbtSeen ? "ok" : "-") + ")";
 }
 
+// ------------------------------------------------------------------------------------------------
+// Live data in the IO4-Emulation mode (Supernova). The stream interface of the other modes is not there; the pads are what the
+// game reads on the serial port of the slider (Web Serial), the air beams and the buttons what it reads from the I/O board
+// (WebHID). Both can only be opened while the game is closed.
+// ------------------------------------------------------------------------------------------------
+const SLIDER_ENABLE = Uint8Array.from([0xFF, 0x03, 0x00, 0xFE]);              // report every 15 ms
+const SLIDER_DISABLE = Uint8Array.from([0xFF, 0x04, 0x00, 0xFD, 0xFC]);       // the checksum FD is escaped
+const io4Serial = { reader: null, loop: null, state: 0, mark: false, cmd: 0, length: 0, data: [], sum: 0 };
+
+const serialAvailable = () => "serial" in navigator;
+
+// The device has three serial ports (the slider and the two LED boards) and the browser lists them all under the same name. The slider is the one that
+// answers its hardware information request: true for it, false for the others, null when the port cannot be opened (the game has it).
+async function io4IsSliderPort(port) {
+  try { await port.open({ baudRate: 115200 }); } catch (e) { return null; }
+  let found = false;
+  try {
+    const w = port.writable.getWriter();
+    try { await w.write(Uint8Array.from([0xFF, 0xF0, 0x00, 0x11])); } finally { w.releaseLock(); }      // the hardware information request
+    const r = port.readable.getReader(), timer = setTimeout(() => { r.cancel().catch(() => {}); }, 500);
+    let before = 0;
+    try {
+      while (!found) {
+        const res = await r.read();
+        if (res.done) break;
+        for (const b of res.value) { if (before === 0xFF && b === 0xF0) found = true; before = b; }      // its answer starts with FF F0
+      }
+    } finally { clearTimeout(timer); try { await r.cancel(); } catch (e) {} try { r.releaseLock(); } catch (e) {} }
+  } catch (e) {}
+  try { await port.close(); } catch (e) {}
+  return found;
+}
+
+// The device has three serial ports (the slider and the two LED boards). The browser lists them all under the same name, so the user
+// is asked to allow all three, in any order, and the page then finds the slider among them by what it answers.
+const IO4_SERIAL_PORTS = 3;
+
+async function io4GrantedPorts() {
+  if (!serialAvailable()) return [];
+  try { return (await navigator.serial.getPorts()).filter(p => { const i = p.getInfo(); return i.usbVendorId === IO4_VID && i.usbProductId === IO4_PID; }); }
+  catch (e) { return []; }
+}
+
+// The slider among the ports that were allowed. With `ask` the browser's chooser is shown first (it needs a click of the user).
+// { port } when found, else { count, error }: count is how many of the three ports are allowed.
+// The probes open the ports, so they run one after the other: two at once (the page starts the live data and looks for the permissions
+// when the device connects) would find each other's port busy and report that the game has it.
+let io4ProbeQueue = Promise.resolve();
+async function io4EnsureSliderPort(ask) {
+  if (ask) {                                       // right away: the browser only shows its chooser for a click that is still recent
+    try { await navigator.serial.requestPort({ filters: [{ usbVendorId: IO4_VID, usbProductId: IO4_PID }] }); }
+    catch (e) { if (e.name !== "NotFoundError") log("serial port not added: " + e.message); }
+  }
+  const run = io4ProbeQueue.then(io4FindSliderPort);
+  io4ProbeQueue = run.catch(() => {});
+  return run;
+}
+async function io4FindSliderPort() {
+  const known = app.conn && app.conn.serialPort;
+  if (known) return { port: known, count: IO4_SERIAL_PORTS };                          // an earlier probe found it
+  const granted = await io4GrantedPorts();
+  if (granted.length < IO4_SERIAL_PORTS) return { count: granted.length, error: granted.length + " of " + IO4_SERIAL_PORTS + " serial ports allowed: allow the next one." };
+  let busy = false;
+  for (let attempt = 0; attempt < 2; attempt++) {                                      // a port that is still closing is busy for a moment
+    busy = false;
+    for (const p of granted) {
+      const slider = await io4IsSliderPort(p);
+      if (slider === true) return { port: p, count: granted.length };
+      if (slider === null) busy = true;
+    }
+    if (!busy) break;
+    await sleep(400);
+  }
+  return { count: granted.length, error: busy ? "Could not open the serial ports. Close the game, it uses them." : "None of the serial ports answers like the slider." };
+}
+
+async function io4AllowSerial() {
+  const c = app.conn; if (!c) return;
+  const r = await io4EnsureSliderPort(true);
+  if (r.port) c.serialPort = r.port; else if (r.error) toast(r.error, r.count < IO4_SERIAL_PORTS ? "ok" : "bad");
+  c.serialCount = r.count; c.serialError = r.port ? "" : (r.error || "");
+  updateStream(); updateGate();
+}
+
+// The I/O board: the air beams and FN1 / FN2 in the buttons byte of the live decoder (bit 0 is beam 1).
+function io4HidReport(e) {
+  const d = new Uint8Array(e.data.buffer, e.data.byteOffset, e.data.byteLength);
+  if (e.reportId !== 1 || d.length < 32) return;
+  const words = [d[28] | (d[29] << 8), d[30] | (d[31] << 8)];           // the report without its ID: buttons at 28 and 30
+  let b = 0;
+  for (let beam = 0; beam < 6; beam++) if (!(words[beam & 1] & (1 << (13 - (beam >> 1))))) b |= 1 << beam;   // the bit of a beam is set while it is free
+  if (words[0] & (1 << 9)) b |= 0x80;                                    // TEST (FN1)
+  if (words[0] & (1 << 6)) b |= 0x40;                                    // SERVICE (FN2)
+  app.live.buttons = b; app.live.rev++;
+}
+async function io4AllowHid() {
+  const c = app.conn; if (!c) return;
+  let devs = [];
+  try { devs = await hid().requestDevice({ filters: [{ vendorId: IO4_VID, productId: IO4_PID, usagePage: 0x01, usage: 0x04 }] }); }
+  catch (e) { log("I/O board not added: " + e.message); return; }
+  if (devs[0]) await io4AttachHid(devs[0], false);
+}
+async function io4AttachHid(d, silent) {
+  const c = app.conn; if (!c) return false;
+  try { if (!d.opened) await d.open(); }
+  catch (e) { log("I/O board: " + e.message); if (!silent) toast("Could not open the I/O board: " + e.message + " (is the game running?)", "bad"); return false; }
+  d.addEventListener("inputreport", io4HidReport);
+  c.io4Hid = d; updateStream(); updateGate();
+  return true;
+}
+
+// The bytes of the slider, unescaped; a report of 32 pressure values updates the live data.
+function io4SerialByte(byte) {
+  const s = io4Serial;
+  if (byte === 0xFD) { s.mark = true; return; }
+  if (s.mark) { s.mark = false; if (byte === 0xFE || byte === 0xFC) byte++; }
+  s.sum = (s.sum + byte) & 255;
+  if (s.state === 0) { s.sum = 0xFF; if (byte === 0xFF) s.state = 1; }
+  else if (s.state === 1) { s.cmd = byte; s.state = 2; }
+  else if (s.state === 2) { s.length = byte; s.data = []; s.state = byte ? 3 : 4; }
+  else if (s.state === 3) { s.data.push(byte); if (s.data.length === s.length) s.state = 4; }
+  else {
+    if (s.sum === 0 && s.cmd === 0x01 && s.length === 32) {
+      const L = app.live;
+      for (let d = 0; d < 32; d++) L.press[d] = s.data[31 - d];      // the report has the cells the other way round, the game's way
+      L.dbtSeen++; L.packets++; L.rev++; L.lastAt = performance.now();
+    }
+    s.state = 0;
+  }
+}
+
+async function io4StartSerial() {
+  const c = app.conn, port = c && c.serialPort;
+  if (!port) return false;
+  if (led.dev && led.dev.io4) await ledDisconnect();       // the LED test has the port
+  if (led.closing) await led.closing;
+  try { await port.open({ baudRate: 115200 }); }
+  catch (e) { toast("Could not open the slider port: " + e.message + ". Close the game, it uses that port.", "bad"); log("slider port: " + e.message); return false; }
+  Object.assign(io4Serial, { state: 0, mark: false, sum: 0 });
+  io4Serial.reader = port.readable.getReader();
+  io4Serial.loop = (async () => {
+    try { for (;;) { const r = await io4Serial.reader.read(); if (r.done) break; for (const b of r.value) io4SerialByte(b); } }
+    catch (e) { log("slider port: " + e.message); }
+  })();
+  const w = port.writable.getWriter();
+  try { await w.write(SLIDER_ENABLE); } finally { w.releaseLock(); }
+  return true;
+}
+async function io4StopSerial() {
+  const c = app.conn, port = c && c.serialPort;
+  if (!port || !io4Serial.reader) return;
+  try { const w = port.writable.getWriter(); try { await w.write(SLIDER_DISABLE); } finally { w.releaseLock(); } } catch (e) {}
+  try { await io4Serial.reader.cancel(); } catch (e) {}
+  try { await io4Serial.loop; } catch (e) {}
+  try { io4Serial.reader.releaseLock(); } catch (e) {}
+  io4Serial.reader = null;
+  try { await port.close(); } catch (e) {}
+}
+
+// In the IO4-Emulation mode the two buttons are what the game sees: TEST (FN1) and SERVICE (FN2).
+function renderFnLabels() {
+  document.body.classList.toggle("io4", isIo4());      // square, they stand for the features and not for the buttons
+  $("fnLabel1").textContent = isIo4() ? "TEST" : "fn1";
+  $("fnLabel2").textContent = isIo4() ? "SERVICE" : "fn2";
+}
+
+// What updateStream shows in the IO4-Emulation mode; true when the data can be streamed.
+async function io4UpdateStream(c, notice) {
+  notice.classList.add("cfw-banner");
+  if (!serialAvailable()) {
+    notice.hidden = false; notice.innerHTML = "<b class='cfw-note'>IO4-Emulation mode:</b> live data needs Web Serial (Chrome or Edge on desktop). Or switch to WINUSB in Config.";
+    $("streamInfo").textContent = "Live data: unavailable"; return false;
+  }
+  if (!c.serialPort) { const r = await io4EnsureSliderPort(false); c.serialPort = r.port || null; c.serialCount = r.count || 0; }
+  const parts = [];
+  if (!c.serialPort) parts.push('The pads are read on the slider serial port. The device has three serial ports, listed under the same name: allow all three, in any order, and keep accepting until the count says 3 of 3.<br><button class="btn" id="btnAllowSerial">Allow a serial port (' + (c.serialCount || 0) + ' of ' + IO4_SERIAL_PORTS + ' allowed)</button>');
+  if (!c.io4Hid) parts.push('The air beams and buttons are read from the I/O board. <button class="btn plain" id="btnAllowIo4">Allow the I/O board</button>');
+  notice.hidden = !parts.length;
+  if (parts.length) {
+    notice.innerHTML = "<b class='cfw-note'>IO4-Emulation mode:</b> close the game, it uses the same ports.<br>" + parts.join("<br>");
+    if ($("btnAllowSerial")) $("btnAllowSerial").onclick = io4AllowSerial;
+    if ($("btnAllowIo4")) $("btnAllowIo4").onclick = io4AllowHid;
+  }
+  if (!c.serialPort) { $("streamInfo").textContent = "Live data: slider port not allowed"; return false; }
+  return true;
+}
 // ------------------------------------------------------------------------------------------------
 // Advanced: single sensor thresholds
 // ------------------------------------------------------------------------------------------------
@@ -2016,10 +2828,13 @@ $("btnDebug").onclick = () => { debugOpen = !debugOpen; renderDebug(); };
 // LED test: drawing of the device, a color picker, and WebUSB output to the LED endpoint
 // ------------------------------------------------------------------------------------------------
 // Zones: 0..30 slider LEDs (0 is the rightmost pad, then a divider, alternating), 31..33 left tower, 34..36 right tower.
-const led = { dev: null, timer: null, busy: false, rgb: [0, 0, 0], packets: 0, colors: Array.from({ length: 37 }, () => [0, 0, 0]), sel: new Set(), els: [] };
+// With the Supernova firmware each tower LED can also be set on its own: zones 37..84, 37 + tower * 24 + LED counted from the bottom.
+const LED_ZONES = 37, LED_ALL_ZONES = LED_ZONES + 2 * LED_TOWER_LEDS;
+const led = { dev: null, timer: null, busy: false, rgb: [0, 0, 0], packets: 0, colors: Array.from({ length: LED_ALL_ZONES }, () => [0, 0, 0]), sel: new Set(), els: [], ind: false, last: null };
+const ledVisible = z => z < 31 || (led.ind ? z >= LED_ZONES : z < LED_ZONES);
 const ledHsv = (h, s, v) => { const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); }; return [f(5), f(3), f(1)].map(x => Math.round(x * 255)); };
 const ledHex = a => "#" + a.map(x => x.toString(16).padStart(2, "0")).join("");
-function ledZoneName(z) { return z < 31 ? (z % 2 ? "Divider " + ((z + 1) / 2) : "Pad " + (z / 2 + 1)) + " (counted from the right)" : (z < 34 ? "Left tower group " + (z - 30) : "Right tower group " + (z - 33)) + " (8 LEDs, one color)"; }
+function ledZoneName(z) { if (z >= LED_ZONES) { const t = Math.floor((z - LED_ZONES) / LED_TOWER_LEDS); return (t ? "Right" : "Left") + " tower LED " + ((z - LED_ZONES) % LED_TOWER_LEDS + 1) + " (counted from the bottom)"; } return z < 31 ? (z % 2 ? "Divider " + ((z + 1) / 2) : "Pad " + (z / 2 + 1)) + " (counted from the right)" : (z < 34 ? "Left tower group " + (z - 30) : "Right tower group " + (z - 33)) + " (8 LEDs, one color)"; }
 function ledRenderZone(z) {
   const e = led.els[z], c = led.colors[z], on = c[0] + c[1] + c[2] > 0, mx = Math.max(c[0], c[1], c[2]) / 255;
   e.style.setProperty("--led", on ? "rgb(" + c.join(",") + ")" : "#222");
@@ -2027,8 +2842,13 @@ function ledRenderZone(z) {
   e.classList.toggle("sel", led.sel.has(z));
 }
 function ledRenderCount() {
+  ledRenderBars();
+  $("ledTowerL").classList.toggle("sel", ledWhole() && ledTowerZones(0).every(z => led.sel.has(z)));      // a border that is lit: all of it is selected
+  $("ledTowerR").classList.toggle("sel", ledWhole() && ledTowerZones(1).every(z => led.sel.has(z)));
+  $("ledStrip").classList.toggle("sel", ledWhole() && LED_SLIDER_ZONES.every(z => led.sel.has(z)));
   const n = led.sel.size;
-  $("ledCount").textContent = n ? n + " of 37 zones selected. The color sliders change the selected zones." : "Click a zone to select it, click it again to deselect it. Several zones can be selected at once.";
+  const total = led.ind ? 31 + 2 * LED_TOWER_LEDS : LED_ZONES, unit = led.ind ? "LEDs" : "zones";
+  $("ledCount").textContent = n ? n + " of " + total + " " + unit + " selected. The color sliders change the selected " + unit + "." : "Click a " + (led.ind ? "LED" : "zone") + " to select it, click it again to deselect it. Several can be selected at once." + (led.ind ? " Shift-click selects a range of tower LEDs, the bar beside a group of 8 selects the whole group." : "") + " Click the border of a tower or of the slider to select all of it.";
 }
 // Sliders -> color; the sliders show the color of a single selected zone
 function ledPicked() { const h = Number($("ledHue").value), b = Number($("ledBright").value) / 100; return ledHsv(h, 1, b); }
@@ -2036,9 +2856,28 @@ function ledUpdatePicker() {
   const shown = ledPicked(); led.rgb = shown;
   $("ledSwatch").style.setProperty("--led-pick", ledHex(shown)); $("ledHex").textContent = ledHex(shown); $("ledBrightVal").textContent = $("ledBright").value;
 }
-function ledToggle(z) {
-  if (led.sel.has(z)) led.sel.delete(z); else led.sel.add(z);
-  ledRenderZone(z); ledRenderCount();
+// The frame of a tower or of the slider selects all of it (or deselects it when it all is selected).
+function ledToggleMany(zones) {
+  const on = !zones.every(z => led.sel.has(z));
+  for (const z of zones) { if (on) led.sel.add(z); else led.sel.delete(z); ledRenderZone(z); }
+  led.last = zones[0]; ledRenderCount();
+}
+const ledWhole = () => true;            // the border of a tower or of the slider selects all of it, in every mode
+const LED_FRAME_RING = 14;                                           // how far from its edge the border of a tower or of the slider reaches (px)
+const LED_SLIDER_ZONES = Array.from({ length: 31 }, (_, z) => z);
+const ledTowerZones = t => led.ind ? Array.from({ length: LED_TOWER_LEDS }, (_, n) => LED_ZONES + t * LED_TOWER_LEDS + n) : [31 + 3 * t, 32 + 3 * t, 33 + 3 * t];
+function ledToggleTower(t) {
+  ledToggleMany(ledTowerZones(t));
+}
+function ledToggle(z, range) {
+  if (range && z >= LED_ZONES && led.last !== null && led.last >= LED_ZONES && Math.floor((led.last - LED_ZONES) / LED_TOWER_LEDS) === Math.floor((z - LED_ZONES) / LED_TOWER_LEDS)) {
+    const on = !led.sel.has(z);     // a range follows what the clicked LED becomes
+    for (let k = Math.min(led.last, z); k <= Math.max(led.last, z); k++) { if (on) led.sel.add(k); else led.sel.delete(k); ledRenderZone(k); }
+  } else {
+    if (led.sel.has(z)) led.sel.delete(z); else led.sel.add(z);
+    ledRenderZone(z);
+  }
+  led.last = z; ledRenderCount();
   if (led.sel.size === 1) {          // show the color of that zone on the sliders
     const c = led.colors[[...led.sel][0]], mx = Math.max(...c);
     if (mx > 0) {
@@ -2048,48 +2887,174 @@ function ledToggle(z) {
     }
   }
 }
-function ledSelect(all) { for (let z = 0; z < 37; z++) { if (all) led.sel.add(z); else led.sel.delete(z); ledRenderZone(z); } ledRenderCount(); }
+// The bar beside a group of eight: select its LEDs, or deselect them when all are selected.
+function ledGroupZones(t, g) { return Array.from({ length: 8 }, (_, n) => LED_ZONES + t * LED_TOWER_LEDS + g * 8 + n); }
+function ledRenderBars() { document.querySelectorAll(".led-bar").forEach(b => { const t = Math.floor(b.dataset.group / 3), g = b.dataset.group % 3; b.classList.toggle("sel", ledGroupZones(t, g).every(z => led.sel.has(z))); }); }
+function ledToggleGroup(t, g) {
+  const zones = ledGroupZones(t, g), all = zones.every(z => led.sel.has(z));
+  for (const z of zones) { if (all) led.sel.delete(z); else led.sel.add(z); ledRenderZone(z); }
+  led.last = zones[7]; ledRenderCount();
+}
+function ledSelect(all) { for (let z = 0; z < LED_ALL_ZONES; z++) { if (all && ledVisible(z)) led.sel.add(z); else led.sel.delete(z); ledRenderZone(z); } ledRenderCount(); }
 function ledApplyPicker() {
   ledUpdatePicker();
   for (const z of led.sel) { led.colors[z] = led.rgb.slice(); ledRenderZone(z); }
 }
 (function ledTest() {
   const strip = $("ledStrip");
-  const mk = (tag, z) => { const e = document.createElement(tag); e.className = (tag === "span" ? (z % 2 ? "div" : "pad") + " " : "") + "led-zone"; e.title = ledZoneName(z); e.dataset.z = z; e.onclick = () => ledToggle(z); led.els[z] = e; return e; };
+  const mk = (tag, z) => { const e = document.createElement(tag); e.className = (tag === "span" ? (z % 2 ? "div" : "pad") + " " : "") + "led-zone"; e.title = ledZoneName(z); e.dataset.z = z; e.onclick = ev => { ev.stopPropagation(); ledToggle(z, ev.shiftKey); }; led.els[z] = e; return e; };
   for (let pos = 0; pos < 31; pos++) strip.appendChild(mk("span", 30 - pos));   // left to right on screen
   const mkGroup = z => { const e = mk("div", z); e.classList.add("led-group"); for (let i = 0; i < 8; i++) e.appendChild(document.createElement("b")); return e; };
   for (const [id, first] of [["ledTowerL", 31], ["ledTowerR", 34]]) { const label = $(id).firstChild; for (let k = 2; k >= 0; k--) $(id).insertBefore(mkGroup(first + k), label); }   // group 1 is the bottom one
+  for (let t = 0; t < 2; t++) {         // the individual LEDs of a tower: three groups of eight, the top one first
+    const lines = document.createElement("div"), tower = $(t ? "ledTowerR" : "ledTowerL"); lines.className = "led-lines";
+    for (let g = 2; g >= 0; g--) {
+      const sub = document.createElement("div"), col = document.createElement("div"), bar = document.createElement("i");
+      sub.className = "led-sub"; col.className = "col"; bar.className = "led-bar"; bar.dataset.group = t * 3 + g;
+      bar.title = "Select the 8 LEDs of this group (a zone of the official LED packet)"; bar.onclick = () => ledToggleGroup(t, g);
+      for (let n = 7; n >= 0; n--) col.appendChild(mk("b", LED_ZONES + t * LED_TOWER_LEDS + g * 8 + n));
+      sub.appendChild(col); sub.appendChild(bar); lines.appendChild(sub);
+    }
+    tower.insertBefore(lines, tower.lastChild);
+  }
+  // The border of a tower or of the slider selects all of it. Only the border: what is inside it is made of zones that are clicked one by one.
+  const frame = (el, action) => {
+    const near = ev => { const r = el.getBoundingClientRect(); return Math.min(ev.clientX - r.left, r.right - ev.clientX, ev.clientY - r.top, r.bottom - ev.clientY) <= LED_FRAME_RING; };
+    const onBorder = ev => ledWhole() && (ev.target === el || ev.target.classList.contains("led-label")) && near(ev);
+    el.addEventListener("mousemove", ev => el.classList.toggle("edge", onBorder(ev)));
+    el.addEventListener("mouseleave", () => el.classList.remove("edge"));
+    el.addEventListener("click", ev => { if (onBorder(ev)) action(); });
+  };
+  frame($("ledTowerL"), () => ledToggleTower(0));
+  frame($("ledTowerR"), () => ledToggleTower(1));
+  frame($("ledStrip"), () => ledToggleMany(LED_SLIDER_ZONES));
   $("ledHue").addEventListener("input", ledApplyPicker); $("ledBright").addEventListener("input", ledApplyPicker);
   $("ledSelAll").onclick = () => ledSelect(true); $("ledSelNone").onclick = () => ledSelect(false);
-  $("ledOff").onclick = () => { for (let z = 0; z < 37; z++) { led.colors[z] = [0, 0, 0]; ledRenderZone(z); } };
-  for (let z = 0; z < 37; z++) ledRenderZone(z);
-  ledUpdatePicker(); ledRenderCount();
+  $("ledOff").onclick = () => { for (let z = 0; z < LED_ALL_ZONES; z++) { led.colors[z] = [0, 0, 0]; ledRenderZone(z); } };
+  for (let z = 0; z < LED_ALL_ZONES; z++) ledRenderZone(z);
+  ledUpdatePicker(); ledSelect(true);
 })();
 
-function ledStatus(text, bad) { $("ledStatus").textContent = text; $("ledStatus").className = "tips" + (bad ? " bad" : ""); }
+// Supernova: each tower LED on its own, always, as soon as the device is connected in the top bar and its firmware says it knows the
+// extended LED packet (an older Supernova or the official firmware would take it for garbage). Without it the three groups stay.
+function ledSetIndividual(on) {
+  const all = Array.from({ length: LED_ALL_ZONES }, (_, z) => z).filter(ledVisible).every(z => led.sel.has(z));
+  led.ind = on && ledIndividualAvailable();
+  $("ledDevice").classList.toggle("ind", led.ind);
+  for (const z of [...led.sel]) if (!ledVisible(z)) { led.sel.delete(z); ledRenderZone(z); }
+  if (led.ind) for (let t = 0; t < 2; t++) for (let n = 0; n < LED_TOWER_LEDS; n++) { led.colors[LED_ZONES + t * LED_TOWER_LEDS + n] = led.colors[31 + 3 * t + Math.floor(n / 8)].slice(); ledRenderZone(LED_ZONES + t * LED_TOWER_LEDS + n); }   // start from the group colors
+  if (all) ledSelect(true); else ledRenderCount();
+}
+const ledIndividualAvailable = () => !!(app.conn && app.conn.cfw && !app.conn.update && app.conn.ledExt);
+async function updateLedExt() {
+  const c = app.conn;
+  if (c && c.cfw && !c.update && c.ledExt === undefined) {
+    c.ledExt = null;                    // asking
+    try { c.ledExt = (await c.api.ledExtInfo()).protocol === LED_EXT_VERSION; }
+    catch (e) { c.ledExt = false; log("individual LEDs: " + e.message); }
+    if (app.conn !== c) return;
+  }
+  const ok = ledIndividualAvailable();
+  if (isIo4()) $("ledNote").innerHTML = ledNoteIo4; else $("ledNote").textContent = ledNoteUsb;
+  $("ledNote").classList.toggle("cfw-banner", isIo4());
+  if (isIo4()) {
+    $("ledConnect").disabled = !serialAvailable() || !!(c && c.update);
+    $("ledIndNote").innerHTML = "<b class='cfw-note'>IO4-Emulation mode:</b> The game sends three static color signals for each of the two air towers (SIDE DEVICE LED L and R), one for each group of eight LEDs.";
+    if (led.ind) ledSetIndividual(false);
+    return;
+  }
+  $("ledIndNote").innerHTML = ok ? "<b class='cfw-note'>Supernova:</b> allows you to test every LED independently. The official firmware only allows you to light up groups." : c && c.cfw && c.ledExt === false ? "<b class='cfw-note'>Supernova:</b> this firmware cannot set the tower LEDs one by one yet, update it." : "";
+  if (ok !== led.ind) ledSetIndividual(ok);
+ 
+}
+const ledNoteUsb = $("ledNote").textContent;
+const ledNoteIo4 = "<b class='cfw-note'>IO4-Emulation mode:</b> the slider LEDs are sent on the slider serial port (Web Serial) and the colors of the two air towers on the command channel. Close the game first.";
+
+// The output of the IO4-Emulation mode: it takes the official LED packet the page makes and sends the slider and the tower colors.
+class Io4LedOut {
+  constructor(port, c) { this.io4 = true; this.port = port; this.c = c; this.writer = port.writable.getWriter(); this.towers = ["", ""]; }
+  async transferOut(endpoint, p) {
+    await this.writer.write(buildSliderLedFrame(p));
+    for (let t = 0; t < 2; t++) {                               // the three groups of each tower, as the packet has them
+      const colors = Array.from(p.subarray(96 + 9 * t, 105 + 9 * t));
+      if (colors.join() !== this.towers[t]) { this.towers[t] = colors.join(); await this.c.api.ledTowers(t, colors); }
+    }
+    return { status: "ok", bytesWritten: p.length };
+  }
+  async close() { try { this.writer.releaseLock(); } catch (e) {} try { await this.port.close(); } catch (e) {} }
+}
+async function ledConnectIo4() {
+  const c = app.conn;
+  if (!serialAvailable()) { ledStatus("This browser has no Web Serial. Use Chrome or Edge.", true); return; }
+  let port = c.serialPort;
+  if (!port) {                                              // the three serial ports have to be allowed first
+    let r = await io4EnsureSliderPort(false);
+    if (!r.port) r = await io4EnsureSliderPort(true);
+    c.serialCount = r.count;
+    if (!r.port) { ledStatus(r.error, r.count >= IO4_SERIAL_PORTS); updateStream(); return; }
+    port = r.port;
+  }
+  c.serialPort = port;
+  if (app.streaming) await stopStream();                   // the Input test has the port
+  try { await port.open({ baudRate: 115200 }); }
+  catch (e) { led.failed = true; ledStatus("Could not open the slider port (" + e.message + "). Close the game, it uses that port.", true); log("LED output: " + e.message); ledButtons(); return; }
+  led.failed = false;
+  led.dev = new Io4LedOut(port, c);
+  log("LED output opened (slider serial port)");
+  ledStatus("LED output: ready"); ledButtons(); updateLedExt(); ledOpened();
+}
+
+// The LED page opens the output of the IO4-Emulation mode by itself: the permissions were given on the welcome page.
+async function ledAutoConnect() {
+  if (!app.conn || led.dev || led.connecting) return;
+  if (isIo4()) {
+    if (!app.conn.serialPort) return;
+    led.connecting = true; led.failed = false; ledButtons(); ledStatus("LED output: connecting...");
+    ledConnectIo4().finally(() => { led.connecting = false; ledButtons(); });
+    return;
+  }
+  if (!navigator.usb) return;                                   // the device in WINUSB mode, allowed on an earlier visit: no click needed
+  led.connecting = true;
+  try {
+    const dev = (await navigator.usb.getDevices()).find(d => d.vendorId === VID && d.productId === 0x1231);
+    led.granted = !!dev;
+    if (dev && app.page === "led" && !led.dev) { ledStatus("LED output: connecting..."); ledButtons(); led.failed = false; await ledOpenUsb(dev); }
+  } catch (e) { log("LED output: " + e.message); }
+  led.connecting = false; ledButtons();
+}
+// The output sends while the LED page is shown and stops when the user leaves it.
+function ledOpened() { if (app.page === "led") ledStart(); else if (led.dev && led.dev.io4) ledDisconnect(); }
+// Only what needs the user's attention is shown: the progress ("LED output: ready", "connecting"...) is not.
+function ledStatus(text, bad) { $("ledStatus").textContent = bad || !text.startsWith("LED output: ") ? text : ""; $("ledStatus").className = "tips" + (bad ? " bad" : ""); }
 function ledButtons() {
-  $("ledConnect").hidden = !!led.dev; $("ledApply").hidden = !led.dev;
-  $("ledApply").textContent = led.timer ? "Stop" : "Show on device";
+  const auto = (isIo4() ? !!(app.conn && app.conn.serialPort) : led.granted) && !led.failed;      // it connects by itself when the permission is there
+  $("ledConnect").hidden = !!led.dev || auto;
+  $("ledConnect").textContent = led.failed ? "Try again" : "Connect LED output";
 }
 async function ledConnect() {
+  if (isIo4()) return ledConnectIo4();
   if (!navigator.usb) { ledStatus("This browser has no WebUSB. Use Chrome or Edge.", true); return; }
   let dev;
   try { dev = await navigator.usb.requestDevice({ filters: [{ vendorId: VID, productId: 0x1231 }] }); }
   catch (e) { ledStatus(e.name === "NotFoundError" ? "No device chosen. The LED output needs the device in WINUSB mode with the WinUSB driver." : "LED output: " + e.message, e.name !== "NotFoundError"); return; }
+  await ledOpenUsb(dev);
+}
+async function ledOpenUsb(dev) {
   try {
     await dev.open();
     if (dev.configuration === null) await dev.selectConfiguration(1);
     await dev.claimInterface(0);
   } catch (e) {
     try { await dev.close(); } catch (x) {}
+    led.failed = true; ledButtons();
     ledStatus("Could not use the LED interface (" + e.message + "). Close the game or any program using the Tasoller, and check that Windows uses the WinUSB driver for it.", true); log("LED output: " + e.name + ": " + e.message); return;
   }
   const itf = (dev.configuration ? dev.configuration.interfaces : []).map(i => "interface " + i.interfaceNumber + ": " + i.alternate.endpoints.map(e => "ep " + e.endpointNumber + " " + e.direction + " " + e.type).join(", ")).join(" | ");
   log("LED output: " + itf);
   const ep = (dev.configuration ? dev.configuration.interfaces : []).filter(i => i.interfaceNumber === 0).flatMap(i => i.alternate.endpoints).find(e => e.endpointNumber === LED_ENDPOINT && e.direction === "out");
-  if (!ep) { try { await dev.releaseInterface(0); await dev.close(); } catch (x) {} ledStatus("The device has no LED endpoint (endpoint 3, OUT) on interface 0. Found: " + (itf || "nothing") + ". Is it in WINUSB mode?", true); return; }
-  led.dev = dev; log("LED output opened (WebUSB, interface 0)");
-  ledStatus("LED output: ready"); ledButtons();
+  if (!ep) { try { await dev.releaseInterface(0); await dev.close(); } catch (x) {} led.failed = true; ledButtons(); ledStatus("The device has no LED endpoint (endpoint 3, OUT) on interface 0. Found: " + (itf || "nothing") + ". Is it in WINUSB mode?", true); return; }
+  led.dev = dev; led.granted = true; led.failed = false; log("LED output opened (WebUSB, interface 0)");
+  ledStatus("LED output: ready"); ledButtons(); ledOpened();
 }
 async function ledTick() {
   if (!led.dev || led.busy) return;
@@ -2097,17 +3062,23 @@ async function ledTick() {
   try {
     const c = led.colors, r = await led.dev.transferOut(LED_ENDPOINT, buildLedPacket(c.slice(0, 31), c.slice(31, 34), c.slice(34, 37)));
     if (r.status !== "ok") throw new Error("transfer status " + r.status);
+    if (led.ind) for (const p of buildLedExtPackets(c.slice(LED_ZONES))) {      // Supernova: the towers LED by LED, after the official packet
+      const x = await led.dev.transferOut(LED_ENDPOINT, p);
+      if (x.status !== "ok") throw new Error("transfer status " + x.status);
+    }
     led.packets++; if (led.packets === 1) log("LED output: first packet sent, " + r.bytesWritten + " bytes, status " + r.status + ", colors sent");
-    if (led.packets % 25 === 1) ledStatus("LED output: sending (" + led.packets + " packets)");
   } catch (e) { log("LED output: " + e.message); ledStatus("LED output stopped: " + e.message, true); ledStop(); }
   finally { led.busy = false; }
 }
 function ledStart() { if (!led.dev || led.timer) return; led.packets = 0; led.timer = setInterval(ledTick, 40); ledTick(); ledButtons(); }
 // The device falls back to its own lighting about 3 seconds after the last packet.
-function ledStop() { clearInterval(led.timer); led.timer = null; if (led.dev) ledStatus("LED output: ready (the device returns to its own lighting in a few seconds)"); ledButtons(); }
-async function ledDisconnect() { ledStop(); const d = led.dev; led.dev = null; if (d) { try { await d.close(); } catch (e) {} } ledStatus("LED output: not connected"); ledButtons(); }
+function ledStop() { clearInterval(led.timer); led.timer = null; ledButtons(); }
+async function ledDisconnect() {
+  ledStop(); const d = led.dev; led.dev = null;
+  if (d) { led.closing = d.close().catch(() => {}); await led.closing; led.closing = null; }
+  ledStatus("LED output: not connected"); ledButtons();
+}
 $("ledConnect").onclick = ledConnect;
-$("ledApply").onclick = () => { if (led.timer) ledStop(); else ledStart(); };
 if (navigator.usb) navigator.usb.addEventListener("disconnect", e => { if (led.dev && e.device === led.dev) { log("LED output: device disconnected"); led.dev = null; ledStop(); ledStatus("LED output: not connected"); ledButtons(); } });
 
 // ------------------------------------------------------------------------------------------------
@@ -2129,6 +3100,9 @@ async function doFlash() {
     });
     log("update sent in " + ((performance.now() - t0) / 1000).toFixed(1) + " s (device was " + version + ")");
     app.wasFlashed = !c.demo;
+    app.installCfw = !c.demo && !c.cfw && String(pkg.version).startsWith(CFW_VERSION_PREFIX);
+    store("installCfw", app.installCfw ? "1" : "0");                            // kept if the page is reloaded while the device restarts
+    if (app.installCfw) log("Supernova is being installed: the device will be switched to the IO4-Emulation mode when it is back");      // Supernova goes on a device that did not run it: it starts in the IO4-Emulation mode
     setProgress(100, 100, "Done. The Tasoller restarts and its bootloader installs the new firmware. Wait about 10 seconds: the page reconnects by itself, or use Connect.");
     toast("Update sent. The device is restarting.", "ok");
   } catch (e) {
@@ -2167,6 +3141,219 @@ async function onFile() {
 }
 $("btnFlash").onclick = doFlash; $("file").onchange = onFile; $("confirm").onchange = updateButtons;
 
+// ------------------------------------------------------------------------------------------------
+// Dump page (Supernova only)
+// ------------------------------------------------------------------------------------------------
+app.dump = null; app.dumping = false; app.dumpAbort = false;
+const dumpAvailable = () => { const c = app.conn; return !!(c && c.cfw && !c.update); };
+
+function setDumpProgress(done, total, text) { $("dumpBar").value = total ? Math.min(100, (100 * done) / total) : 0; $("dumpProgress").textContent = text || String.fromCharCode(160); }
+
+function renderDump() {
+  const r = app.dump;
+  if (!r) { $("dumpResult").innerHTML = "<p class='muted'>Nothing dumped yet.</p>"; return; }
+  const hide = $("dumpHideUid").checked;
+  const rows = r.sections.map(s => {
+    const expected = s.name === "KPROM";    // the chip always refuses the key store
+    const status = s.verified ? "<span class='ok'>read</span>" : "<span class='" + (expected ? "ok" : "warn") + " hint' title='" + (expected ? "The chip always refuses the key protection store (KPROM): that is normal." : "The chip refused to give some of this section.") + "'>refused by the chip <i>i</i></span>";
+    return "<tr><td>" + esc(s.name) + "</td><td class='mono'>0x" + hex8(s.addr) + "</td><td>" + s.length + " bytes</td><td>" + status + "</td><td class='mono'>" + hex8(s.crc32).toLowerCase() + "</td><td><button class='btn plain dl' data-section='" + esc(s.name) + "' title='Download " + esc(s.name.toLowerCase()) + ".bin' aria-label='Download " + esc(s.name.toLowerCase()) + ".bin'><svg viewBox='0 0 24 24' fill='currentColor' aria-hidden='true'><path d='M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z'/></svg></button></td></tr>";
+  }).join("");
+  let h = "<table class='kv dump-sections'><tr><th>Section</th><th>Address</th><th>Size</th><th>Status</th><th>CRC-32</th><th></th></tr>" + rows + "</table>";
+  h += "<div class='box dump-info mono'>" + dumpInfoLines(r, hide).map(esc).join("<br>") + "</div>";
+  $("dumpResult").innerHTML = h;
+}
+
+function updateDump() {
+  const c = app.conn, ok = dumpAvailable(), idle = ok && !app.busy && !app.flashing;
+  $("dpDev").textContent = c ? (c.demo ? "Simulated Tasoller Plus" : (c.cmdDev.productName || "Tasoller Plus")) : "not connected"; $("dpDev").className = c ? "ok" : "muted";
+  $("dpVer").textContent = c ? (c.version || "(empty)") : "-"; $("dpVer").className = ok ? "ok" : "muted";
+  $("dpHint").textContent = !c ? "Use Connect in the top bar." : c.update ? "The device is in update mode: restart it normally to dump it." : !c.cfw ? "This is not the Supernova firmware: it cannot be dumped from here." : "";
+  $("btnDump").disabled = !idle; $("btnDumpAbort").disabled = !app.dumping; $("dumpHideUid").disabled = app.dumping;
+  $("btnDumpZip").disabled = !app.dump || app.dumping;
+  if (app.page === "dump" && !ok) showPage("test");
+}
+
+async function doDump() {
+  const c = app.conn; if (!dumpAvailable() || app.dumping) return;
+  app.dumping = true; app.dumpAbort = false; app.busy++; updateButtons();
+  await stopStream();
+  const t0 = performance.now();
+  setDumpProgress(0, 0, "Reading the device...");
+  try {
+    const result = await runDump(c.api, {
+      version: c.version, log,
+      shouldAbort: () => app.dumpAbort,
+      onProgress: (done, total, name) => setDumpProgress(done, total, name ? "Reading " + name + ": " + done + " of " + total + " bytes" : "Done"),
+    });
+    app.dump = result;
+    const s = ((performance.now() - t0) / 1000).toFixed(1);
+    log("dump finished in " + s + " s");
+    setDumpProgress(100, 100, "Done in " + s + " s: " + result.bytes + " bytes in " + result.sections.length + " sections.");
+    toast("Dump finished", "ok");
+  } catch (e) {
+    if (e instanceof DumpAborted) { setDumpProgress(0, 0, "Aborted."); log("dump aborted"); }
+    else {
+      const old = /reported an error/.test(e.message) && /dump (hello|section|info)/.test(e.message);
+      const msg = old ? "this firmware does not have the dump feature: update Supernova" : e.message;
+      log("ERROR: " + msg); setDumpProgress(0, 0, "Error: " + msg); toast("Dump failed: " + msg, "bad");
+    }
+  } finally { app.dumping = false; app.busy--; updateButtons(); updateStream(); renderDump(); }
+}
+
+function saveBlob(name, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+function downloadDump() {
+  const r = app.dump; if (!r) return;
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  saveBlob("ss321-dump-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + ".zip", dumpZip(r, $("dumpHideUid").checked));
+}
+$("dumpResult").addEventListener("click", e => {
+  const b = e.target.closest("button[data-section]"), s = b && app.dump && app.dump.sections.find(x => x.name === b.dataset.section);
+  if (s) saveBlob(s.name.toLowerCase() + ".bin", new Blob([s.data], { type: "application/octet-stream" }));
+});
+
+$("btnDump").onclick = doDump; $("btnDumpAbort").onclick = () => { app.dumpAbort = true; };
+$("btnDumpZip").onclick = downloadDump; $("dumpHideUid").onchange = renderDump;
+// ------------------------------------------------------------------------------------------------
+// Settings backup card of the Config page (Supernova only)
+// ------------------------------------------------------------------------------------------------
+async function exportSettings() {
+  await runOp("Reading the settings", async c => {
+    const block = await readSettingsBlock(c.api);
+    const d = new Date(), p = n => String(n).padStart(2, "0");
+    saveBlob("supernova-settings-" + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds()) + ".snvset",
+      new Blob([settingsFile(block)], { type: "application/octet-stream" }));
+    toast("Settings exported", "ok");
+  });
+}
+
+async function importSettings() {
+  const f = $("setImportFile").files[0]; $("setImportFile").value = "";
+  if (!f) return;
+  let block;
+  try { block = parseSettingsFile(new Uint8Array(await f.arrayBuffer())); }
+  catch (e) { log("ERROR: " + e.message); toast(e.message, "bad"); return; }
+  if (!confirm("Import the settings of " + f.name + "?" + NL + NL + "They replace ALL the settings of the device: thresholds, key maps, USB mode, brightness, delay and touch tuning." + NL + "The device restarts afterwards.")) return;
+  const done = await runOp("Importing the settings", async c => {
+    await writeSettingsBlock(c.api, block);
+    log("settings imported, restarting the device");
+    app.wasFlashed = !c.demo;          // makes the page say that the device is restarting and offer Reconnect
+    toast("Settings imported. The device is restarting.", "ok");
+    await c.api.saveAndReset();
+  });
+  if (done === false) app.wasFlashed = false;
+}
+
+$("btnSetExport").onclick = exportSettings;
+$("btnSetImport").onclick = () => $("setImportFile").click();
+$("setImportFile").onchange = importSettings;
+// ------------------------------------------------------------------------------------------------
+// The welcome page: shown (with no tab) while no device is connected, and while a connected device still needs permissions of the browser:
+//  - in the IO4-Emulation mode (Supernova): its serial ports and its I/O board (live data and LED test),
+//  - in WINUSB mode (the official firmware too): WebUSB for the LED test.
+// ------------------------------------------------------------------------------------------------
+let gateWas = null;
+
+const WINUSB_PID = 0x1231;
+// The LED output of the other modes needs the device in WINUSB mode, which WebUSB has to be allowed to open.
+const usbLedWanted = c => !!(c && !c.demo && !c.update && !isIo4() && c.pid === WINUSB_PID && navigator.usb);
+
+function gateNeeded() {
+  const c = app.conn;
+  if (!c) return true;
+  if (isIo4()) return !(c.serialPort && c.io4Hid);
+  return usbLedWanted(c) && !c.usbLed;
+}
+
+function updateGate() {
+  const c = app.conn, on = gateNeeded(), io4 = isIo4();
+  document.body.classList.toggle("gate", on);
+  const checking = !!(c && on && !c.probed);                // what the browser allowed earlier is still being looked for: no request until it is known
+  $("welcomeOff").hidden = !!c; $("welcomeChecking").hidden = !checking; $("welcomeSetup").hidden = !c || checking;
+  $("welcomeHint").textContent = hid() ? "" : "This browser has no WebHID. Use a recent Chrome or Edge on desktop.";
+  $("welcomeConnect").disabled = !hid();
+  if (c && on) {
+    $("welcomeSetup").classList.toggle("io4", io4);
+    $("setupUsb").hidden = io4; $("setupSerial").hidden = !io4; $("setupHid").hidden = !io4;
+    if (io4) {
+      $("setupTitle").innerHTML = "<span class='cfw-note'>IO4-Emulation mode</span>";
+      $("setupIntro").innerHTML = "The device behaves like the arcade hardware.<br>The Toolkit needs your permission for each part of it: the browser asks for them one at a time.<br>Close the game first, it uses the same ports.";
+      const serialOk = !!c.serialPort, n = c.serialCount || 0, hidOk = !!c.io4Hid;
+      $("setupSerialText").innerHTML = serialAvailable()
+        ? "The slider and the two LED boards each have one.<br>They are listed under the same name: allow all three, in any order."
+        : "Web Serial is not available in this browser: use Chrome or Edge on desktop.";
+      $("setupSerialState").textContent = serialOk ? "Allowed" : n + " of " + IO4_SERIAL_PORTS;
+      $("setupSerialState").className = "setup-state " + (serialOk ? "ok" : "warn");
+      $("setupSerialBtn").hidden = serialOk || !serialAvailable();
+      if (!serialOk && c.serialError && n >= IO4_SERIAL_PORTS) $("setupSerialText").innerHTML += "<br>" + esc(c.serialError);
+      $("setupHidText").innerHTML = "The air beams and the TEST and SERVICE buttons.";
+      $("setupHidState").textContent = hidOk ? "Allowed" : "Not allowed";
+      $("setupHidState").className = "setup-state " + (hidOk ? "ok" : "warn");
+      $("setupHidBtn").hidden = hidOk;
+    } else {
+      $("setupTitle").textContent = "One more permission";
+      $("setupIntro").innerHTML = "The Toolkit needs your permission to reach the device in WINUSB mode.";
+      $("setupUsbState").textContent = c.usbLed ? "Allowed" : "Not allowed";
+      $("setupUsbState").className = "setup-state " + (c.usbLed ? "ok" : "warn");
+      $("setupUsbBtn").hidden = !!c.usbLed;
+    }
+  }
+  // ports that could not be opened (the game has them): look again by itself, so the page moves on when they are free
+  if (c && on && io4 && !c.serialPort && /^Could not open/.test(c.serialError || "") && !app.gateRetry) app.gateRetry = setTimeout(() => { app.gateRetry = null; gateProbe(); }, 2000);
+  if (gateWas && !on) showPage(app.page);                // the permissions are there: the tabs come back
+  if (gateWas !== on) updateStream();
+  gateWas = on;
+}
+
+// Find the permissions that were given earlier, without asking.
+async function gateProbe() {
+  const c = app.conn;
+  if (!c || app.gateProbing) return;
+  app.gateProbing = true;
+  try {
+    if (usbLedWanted(c)) {
+      try { c.usbLed = (await navigator.usb.getDevices()).some(d => d.vendorId === VID && d.productId === WINUSB_PID); } catch (e) {}
+    }
+    if (isIo4()) {
+      if (!c.serialPort && serialAvailable()) {
+        const r = await io4EnsureSliderPort(false);
+        if (app.conn === c) { c.serialPort = r.port || null; c.serialCount = r.count || 0; c.serialError = r.port ? "" : (r.error || ""); }
+      }
+      if (!c.io4Hid && hid()) {
+        let devs = [];
+        try { devs = (await hid().getDevices()).filter(d => d.vendorId === IO4_VID && d.productId === IO4_PID && (d.collections || []).some(x => x.usagePage === 0x01 && x.usage === 0x04)); } catch (e) {}
+        if (devs[0] && app.conn === c) await io4AttachHid(devs[0], true);
+      }
+    }
+  } finally { app.gateProbing = false; c.probed = true; }
+  updateGate();
+}
+
+async function allowUsbLed() {
+  const c = app.conn; if (!c) return;
+  try { await navigator.usb.requestDevice({ filters: [{ vendorId: VID, productId: WINUSB_PID }] }); c.usbLed = true; }
+  catch (e) { if (e.name !== "NotFoundError") toast("Could not allow the LED output: " + e.message, "bad"); }
+  updateGate();
+}
+
+$("welcomeConnect").onclick = () => connectReal();
+$("setupSerialBtn").onclick = io4AllowSerial;
+$("setupHidBtn").onclick = io4AllowHid;
+$("setupUsbBtn").onclick = allowUsbLed;
+// ------------------------------------------------------------------------------------------------
+// Theme: the page follows the light or dark choice of the system (the CSS listens to it by itself) until the user picks one with the
+// buttons of the top bar. The pick is kept in this browser; "system" forgets it.
+// ------------------------------------------------------------------------------------------------
+function applyTheme(choice) {
+  if (choice === "light" || choice === "dark") document.documentElement.setAttribute("data-theme", choice);
+  else { choice = "auto"; document.documentElement.removeAttribute("data-theme"); }
+  document.querySelectorAll("[data-theme-choice]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.themeChoice === choice)));
+}
+document.querySelectorAll("[data-theme-choice]").forEach(b => b.onclick = () => { store("theme", b.dataset.themeChoice); applyTheme(b.dataset.themeChoice); });
+applyTheme(load("theme"));
 // ------------------------------------------------------------------------------------------------
 // start
 // ------------------------------------------------------------------------------------------------

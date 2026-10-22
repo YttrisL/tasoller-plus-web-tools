@@ -1,0 +1,35 @@
+<!-- ============================ WELCOME ============================ -->
+<section id="page-welcome" class="page" aria-label="Welcome">
+  <div class="welcome">
+    <div class="welcome-brand">TASOLLER<b>+</b><span>Toolkit</span></div>
+    <div id="welcomeOff">
+      <h1>Connect your Tasoller Plus</h1>
+      <p>Plug the device in with a USB cable.<br>Close the official tool and the game if they are running, they use the device.<br>Then press Connect and pick the device in the list of the browser.</p>
+      <button class="btn" id="welcomeConnect">Connect</button>
+      <p class="muted" id="welcomeHint"></p>
+    </div>
+    <div id="welcomeChecking" hidden>
+      <h1>Connecting...</h1>
+      <p>Checking the permissions the browser already has for the device.</p>
+    </div>
+    <div id="welcomeSetup" hidden>
+      <h1 id="setupTitle"><span class="cfw-note">IO4-Emulation mode</span></h1>
+      <p id="setupIntro">The device behaves like the arcade hardware.<br>The Toolkit needs your permission for each part of it: the browser asks for them one at a time.<br>Close the game first, it uses the same ports.</p>
+      <div class="setup-row" id="setupUsb">
+        <div class="setup-text"><b>LED output</b><span>The LED test sends its colors to the device over WebUSB.<br>It is a separate permission, asked once.<br>Close the game first, it uses the same interface.</span></div>
+        <div class="setup-state" id="setupUsbState"></div>
+        <button class="btn" id="setupUsbBtn">Allow the LED output</button>
+      </div>
+      <div class="setup-row" id="setupSerial">
+        <div class="setup-text"><b>Serial ports</b><span id="setupSerialText"></span></div>
+        <div class="setup-state" id="setupSerialState"></div>
+        <button class="btn" id="setupSerialBtn">Allow a serial port</button>
+      </div>
+      <div class="setup-row" id="setupHid">
+        <div class="setup-text"><b>I/O board</b><span id="setupHidText"></span></div>
+        <div class="setup-state" id="setupHidState"></div>
+        <button class="btn" id="setupHidBtn">Allow the I/O board</button>
+      </div>
+    </div>
+  </div>
+</section>

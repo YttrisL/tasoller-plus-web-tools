@@ -63,6 +63,15 @@ class Link {
     });
   }
 
+  // Send a command the device never answers (it resets while carrying it out).
+  sendNoReply(cmd, payload) {
+    return this.lock(async () => {
+      try { await this.io.send(AES.ecb(this.rk, buildFrame(cmd, randomBytes(1)[0], Uint8Array.from(payload)), true)); }
+      catch (e) { this.log("command 0x" + cmd.toString(16) + ": " + e.message + " (normal if the device already reset)"); }
+      this.shaken = false;
+    });
+  }
+
   async _version() {
     const r = await this._request(2, new Uint8Array(0), 1500, "reading the version");
     const n = Math.max(0, Math.min(r[0] - 2, 58));

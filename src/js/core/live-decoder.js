@@ -11,6 +11,8 @@ class LiveDecoder {
     this.press = new Uint8Array(32); this.diff = new Uint16Array(32); this.pads = new Uint16Array(128);
     this.buttons = 0; this.rev = 0; this.packets = 0; this.chipSeen = [0, 0, 0, 0]; this.dbtSeen = 0; this.lastAt = 0;
   }
+  // Nothing is coming in any more: show nothing rather than the last values.
+  clear() { this.press.fill(0); this.diff.fill(0); this.buttons = 0; this.rev++; }
   feed(data) {
     const u = data instanceof Uint8Array ? data : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
     for (let off = 0; off + FRAME <= u.length; off += FRAME) this._chunk(u.subarray(off, off + FRAME));
