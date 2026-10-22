@@ -26,38 +26,48 @@ function crc16(bytes, crc = 0xFFFF) {      // CRC-16/CCITT-FALSE
 }
 const hex8 = n => (n >>> 0).toString(16).toUpperCase().padStart(8, "0");
 
-// Read the info items and every section. A piece that arrives damaged is asked for again; a piece the chip
-// refuses (the key store always is) stays zero and is listed in `refused`. The sections are objects
-// { name, addr, length, mode, data, refused, retries, verified, crc32, sha256 }.
-async function runDump(dev, { onProgress = () => {}, shouldAbort = () => false, log = () => {}, version = "" } = {}) {
+// The info items and the list of the sections, without any data. The sections are objects { name, addr, length, mode } until they are read.
+async function dumpList(dev) {
   const hello = await dev.dumpHello();
   if (hello.protocol !== DUMP_PROTOCOL) throw new FlashError("the firmware speaks dump protocol " + hello.protocol + ", this page speaks " + DUMP_PROTOCOL);
   const info = [], sections = [];
   for (let i = 0; i < hello.infos; i++) info.push(await dev.dumpInfo(i));
   for (let i = 0; i < hello.sections; i++) sections.push(await dev.dumpSection(i));
-  const total = sections.reduce((s, x) => s + x.length, 0);
+  return { hello, info, sections };
+}
+
+// Read one section. A piece that arrives damaged is asked for again; a piece the chip refuses (the key store always is) stays zero and is listed in
+// `refused`. The section gets { data, refused, retries, verified, crc32, sha256 }. `base` and `total` place it in a longer progress (a whole dump).
+async function dumpSectionRead(dev, s, { onProgress = () => {}, shouldAbort = () => false, log = () => {}, base = 0, total = s.length } = {}) {
+  s.data = new Uint8Array(s.length); s.refused = []; s.retries = 0;
+  for (let off = 0; off < s.length; off += DUMP_CHUNK) {
+    if (shouldAbort()) { s.data = undefined; throw new DumpAborted("aborted"); }
+    const n = Math.min(DUMP_CHUNK, s.length - off), addr = s.addr + off;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const r = await dev.dumpRead(s.mode, addr, n);
+        if (r.refused) s.refused.push(addr); else s.data.set(r.data, off);
+        break;
+      } catch (e) {
+        if (!(e instanceof FlashError) || attempt === DUMP_RETRIES) { s.data = undefined; throw e; }
+        s.retries++; log("dump: " + e.message + " (attempt " + attempt + " of " + DUMP_RETRIES + ")");
+      }
+    }
+    if ((off / DUMP_CHUNK) % 8 === 0) onProgress(base + off + n, total, s.name);
+  }
+  s.crc32 = crc32(s.data); s.sha256 = (await sha256Hex(s.data)) || "";
+  s.verified = s.refused.length === 0;
+  log("dump: " + s.name + " " + s.length + " bytes, " + (s.verified ? "ok" : s.refused.length + " pieces refused by the chip") + (s.retries ? ", " + s.retries + " retries" : ""));
+}
+
+// Read the info items and every section.
+async function runDump(dev, { onProgress = () => {}, shouldAbort = () => false, log = () => {}, version = "" } = {}) {
+  const { hello, info, sections } = await dumpList(dev);
+  const total = sections.reduce((n, x) => n + x.length, 0);
   let done = 0;
   for (const s of sections) {
-    s.data = new Uint8Array(s.length); s.refused = []; s.retries = 0;
-    for (let off = 0; off < s.length; off += DUMP_CHUNK) {
-      if (shouldAbort()) throw new DumpAborted("aborted");
-      const n = Math.min(DUMP_CHUNK, s.length - off), addr = s.addr + off;
-      for (let attempt = 1; ; attempt++) {
-        try {
-          const r = await dev.dumpRead(s.mode, addr, n);
-          if (r.refused) s.refused.push(addr); else s.data.set(r.data, off);
-          break;
-        } catch (e) {
-          if (!(e instanceof FlashError) || attempt === DUMP_RETRIES) throw e;
-          s.retries++; log("dump: " + e.message + " (attempt " + attempt + " of " + DUMP_RETRIES + ")");
-        }
-      }
-      done += n;
-      if ((off / DUMP_CHUNK) % 8 === 0) onProgress(done, total, s.name);
-    }
-    s.crc32 = crc32(s.data); s.sha256 = (await sha256Hex(s.data)) || "";
-    s.verified = s.refused.length === 0;
-    log("dump: " + s.name + " " + s.length + " bytes, " + (s.verified ? "ok" : s.refused.length + " pieces refused by the chip") + (s.retries ? ", " + s.retries + " retries" : ""));
+    await dumpSectionRead(dev, s, { onProgress, shouldAbort, log, base: done, total });
+    done += s.length;
   }
   onProgress(total, total, "");
   return { version, hello, info, sections, bytes: total };
@@ -100,7 +110,7 @@ function makeZip(files) {                  // stored (no compression)
 function dumpZip(result, hideUid) {
   const enc = new TextEncoder(), files = [];
   const manifest = { tool: "tasoller-plus-toolkit", protocol: DUMP_PROTOCOL, firmware: result.version, sections: [] };
-  for (const s of result.sections) {
+  for (const s of result.sections.filter(x => x.data)) {                    // the ones that were read
     const file = s.name.toLowerCase() + ".bin";
     files.push({ name: file, data: s.data });
     manifest.sections.push({ name: s.name, file, address: "0x" + hex8(s.addr), length: s.length, mode: s.mode, verified: s.verified,

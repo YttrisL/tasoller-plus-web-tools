@@ -1,4 +1,6 @@
   /* ---- dump page ---- */
+  .dump-sections .acts { white-space:nowrap; }
+  .dump-sections .dump-one { padding:2px 10px; margin-right:6px; }
   .tab.cfw-only { display:none; }
   body.cfw .tab.cfw-only { display:inline-block; }
   /* Supernova-only features carry a purple border */

@@ -58,6 +58,11 @@ async function selfTest() {
   if (dumpInfoLines(dump, true).join() !== "VERSION " + CFW_VERSION_PREFIX + "TEST,CFG0 FFFFFFFD,UID0 XXXXXXXX,UID1 XXXXXXXX,UCID0 ERROR" || dumpInfoLines(dump, false)[2] !== "UID0 11223344") throw new Error("dump info failed");
   if (crc32(new TextEncoder().encode("123456789")) !== 0xCBF43926 || crc16(new TextEncoder().encode("123456789")) !== 0x29B1) throw new Error("dump checksums failed");
   if ((await dumpZip(dump, true).arrayBuffer()).byteLength < dump.bytes) throw new Error("dump zip failed");
+  const list = await dumpList(dev4);                                  // the list of the sections comes without data, one section can be read alone
+  if (list.sections.length !== SIM_DUMP_SECTIONS.length || list.sections.some(s => s.data)) throw new Error("dump list failed");
+  const one = list.sections.find(s => s.name === "APROM"); await dumpSectionRead(dev4, one);
+  if (!one.data || one.data.length !== one.length || !one.verified || list.sections.filter(s => s.data).length !== 1) throw new Error("dump of one section failed");
+  if ((await dumpZip({ version: "", info: list.info, sections: list.sections }, true).arrayBuffer()).byteLength < one.length) throw new Error("dump zip of one section failed");
   let noDump = false;
   try { await new TasollerDevice(mkLink(new SimDevice())).dumpHello(); } catch (e) { noDump = e instanceof FlashError; }
   if (!noDump) throw new Error("the stock firmware must not answer the dump command");
