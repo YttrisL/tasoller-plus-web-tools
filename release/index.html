@@ -32,7 +32,7 @@
   }
   * { box-sizing:border-box; }
   html, body { margin:0; }
-  body { font:14px/1.45 system-ui, "Segoe UI", sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; }
+  body { font:14px/1.45 system-ui, "Segoe UI", sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; flex-direction:column; }
   button, input, select { font:inherit; color:inherit; }
   [hidden] { display:none !important; }
 
@@ -51,6 +51,7 @@
   .official { display:inline-flex; align-items:center; gap:5px; color:var(--ok); font-weight:600; white-space:nowrap; }
   .official svg { width:17px; height:17px; }
   .official.cfw-badge { color:var(--cfw); }
+  .official.upd-badge { color:var(--amber); }
   .dot.on { background:var(--ok); } .dot.warn { background:var(--warn); } .dot.demo { background:var(--accent); }
   .conn { position:relative; }
   .conninfo { display:inline-flex; align-items:center; gap:8px; background:var(--panel2); border:1px solid var(--line2); padding:5px 12px; border-radius:6px; cursor:pointer; }
@@ -92,7 +93,7 @@
   .ok { color:var(--ok); } .warn { color:var(--warn); } .bad { color:var(--bad); }
   code, .mono { font-family:ui-monospace, Consolas, monospace; font-size:.92em; }
 
-  main { padding:16px; max-width:1900px; margin:0 auto; }
+  main { padding:16px; max-width:1900px; width:100%; margin:0 auto; flex:1 0 auto; }
   .page { display:none; }
   .page.active { display:block; }
 
@@ -331,6 +332,15 @@
   body.gate .tabs { display:none; }
   body.gate .page.active { display:none; }
   body.gate #page-welcome { display:block; }
+  /* A device in update mode only offers the Flasher: the other tabs are not there */
+  body.update-mode .tab:not([data-page="flasher"]):not([data-page="links"]) { display:none !important; }
+  /* With no device only the Home and Useful links tabs are there, and the Useful links page can be shown */
+  .tab.home-only { display:none; }
+  body.nodevice .tab.home-only { display:inline-block; }
+  body.gate.nodevice .tabs { display:flex; }
+  body.gate.nodevice .tab:not([data-page="links"]):not([data-page="home"]) { display:none; }
+  body.gate.nodevice .page#page-links.active { display:block; }
+  body.gate.nodevice.on-links #page-welcome { display:none; }
   .welcome { max-width:640px; margin:8vh auto 0; text-align:center; }
   .welcome-brand { font-size:22px; font-weight:700; letter-spacing:.06em; margin-bottom:28px; }
   .welcome-brand b { color:var(--accent); }
@@ -338,6 +348,8 @@
   .welcome h1 { font-size:20px; margin:0 0 14px; }
   .welcome p { color:var(--muted); margin:0 0 20px; }
   .welcome .btn { padding:9px 26px; }
+  .welcome p.welcome-tip { font-size:14px; color:var(--fg); margin:34px auto 0; max-width:520px; padding:10px 14px; background:var(--panel); border:1px solid var(--line2); border-left:3px solid var(--btn); border-radius:6px; text-align:left; }
+  .welcome-tip b { color:var(--btn); }
   #welcomeSetup { text-align:left; border:1px solid var(--line2); border-radius:8px; padding:18px 22px; background:var(--panel); }
   #welcomeSetup.io4 { border-color:var(--cfw); }
   #welcomeSetup h1 { text-align:center; }
@@ -348,6 +360,13 @@
   .setup-state { font-weight:600; }
   .setup-state.ok { color:var(--ok); }
   .setup-state.warn { color:var(--warn); }
+  /* The slim footer of every page */
+  .site-footer { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:4px 10px; padding:6px 16px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+  .site-footer .sep { color:var(--line2); }
+  .site-footer a { display:inline-flex; align-items:center; gap:5px; color:var(--muted); text-decoration:none; }
+  .site-footer a:hover { color:var(--fg); }
+  .site-footer svg { width:14px; height:14px; }
+  .site-footer a#footDownload { border-bottom:1px solid currentColor; }          /* the link and its icon are underlined */
 
   #toasts { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); display:flex; flex-direction:column; gap:6px; align-items:center; z-index:50; pointer-events:none; }
   .toast { background:var(--panel2); border:1px solid var(--line2); border-radius:6px; padding:8px 14px; box-shadow:0 4px 18px rgba(0,0,0,.35); max-width:80vw; }
@@ -359,6 +378,7 @@
 <header class="topbar">
   <div class="brand">TASOLLER<b>+</b><span>Toolkit</span></div>
   <nav class="tabs" aria-label="Pages">
+    <button class="tab home-only" data-page="home">Home</button>
     <button class="tab" data-page="test">Input test</button>
     <button class="tab" data-page="led">LED test</button>
     <button class="tab" data-page="config">Config</button>
@@ -372,6 +392,7 @@
     <button type="button" id="connInfo" class="conninfo" aria-haspopup="true" aria-expanded="false" disabled>
       <span id="connDot" class="dot"></span>
       <span id="connOfficial" class="official" hidden><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l6 2v4.5c0 3.4-2.5 6.1-6 7.5-3.5-1.4-6-4.1-6-7.5V3l6-2zm-1.2 9.6l4-4.2-1-1-3 3.1-1.3-1.3-1 1 2.3 2.4z"/></svg>Official firmware</span>
+      <span id="connUpdate" class="official upd-badge" hidden title="The device is in update mode"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1l6 2v4.5c0 3.4-2.5 6.1-6 7.5-3.5-1.4-6-4.1-6-7.5V3l6-2zm-1.2 9.6l4-4.2-1-1-3 3.1-1.3-1.3-1 1 2.3 2.4z"/></svg>Update mode</span>
       <span id="connCfw" class="official cfw-badge" hidden title="Supernova custom firmware"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.48 12.35c-1.57-4.08-7.16-4.3-5.81-10.23.1-.44-.37-.78-.75-.55C9.29 3.71 6.68 8 8.87 13.62c.18.46-.36.89-.75.59-1.81-1.37-2-3.34-1.84-4.75.06-.52-.62-.77-.91-.34C4.69 10.16 4 11.84 4 14.37c.38 5.6 5.11 7.32 6.81 7.54 2.43.31 5.06-.14 6.95-1.87 2.08-1.93 2.84-5.01 1.72-7.69zM10.2 17.38c1.44-.35 2.18-1.39 2.38-2.31.33-1.43-.96-2.83-.09-5.09.33 1.87 3.27 3.04 3.27 5.08 0 2.53-2.74 4.7-5.56 2.32z"/></svg>Custom firmware</span>
       <span id="connText" class="conn-text">Not connected</span>
     </button>
@@ -403,6 +424,7 @@
       <p>Plug the device in with a USB cable.<br>Close the official tool and the game if they are running, they use the device.<br>Then press Connect and pick the device in the list of the browser.</p>
       <button class="btn" id="welcomeConnect">Connect</button>
       <p class="muted" id="welcomeHint"></p>
+      <p class="welcome-tip"><b>Hint:</b> if the device is bricked or stuck, it can be started in bootloader mode by pressing the two buttons together while plugging it in. The Toolkit then offers the Flasher to restore a working version of the firmware.</p>
     </div>
     <div id="welcomeChecking" hidden>
       <h1>Connecting...</h1>
@@ -698,6 +720,7 @@
 
 <!-- ============================ FLASHER ============================ -->
 <section id="page-flasher" class="page" aria-label="Flasher">
+ <div class="banner warn" id="flashUpdateNote" hidden>The device is in update mode: the other pages are not available. Flash a firmware here, or restart the device normally.</div>
  <div class="flash-wrap">
   <p class="muted">A browser version of the firmware update function of the official <i>TASOLLER Options</i> tool (V2.8).</p>
 
@@ -849,6 +872,23 @@
     <h2>Useful links</h2>
     <ul class="links">
       <li><a href="https://github.com/YttrisL/tasoller-plus-custom-firmware" target="_blank" rel="noopener">Supernova, the custom firmware</a><span class="muted"> - source, releases and documentation of the custom firmware for the Tasoller Plus.</span></li>
+      <li><a href="https://patcher.re-two-torial.xyz/" target="_blank" rel="noopener">Game patcher</a><span class="muted"> - a tool for patching the game files, allowing extra options.</span></li>
+      <li><a href="https://re-two-torial.xyz/games/sega/chunithm/mate/setup/" target="_blank" rel="noopener">Game setup guide</a><span class="muted"> - how to set the game up.</span></li>
+    </ul>
+    <h2>Recommended extras</h2>
+    <ul class="links">
+      <li><a href="https://github.com/whowechina/aic_pico" target="_blank" rel="noopener">aic_pico</a><span class="muted"> - add a functionally identical Aime card reader to your setup to get even closer to a real arcade experience.</span></li>
+      <li><a href="https://missless.net/home" target="_blank" rel="noopener">Missless</a><span class="muted"> - a community server to save your scores and match online.</span></li>
+    </ul>
+
+    <h2>References</h2>
+    <p class="muted">The projects that were used to build Supernova and this Toolkit.</p>
+    <ul class="links">
+      <li><a href="https://gitea.tendokyu.moe/TeamTofuShop/segatools" target="_blank" rel="noopener">segatools</a><span class="muted"> - the hooks that run the game; the protocols of the LED boards and of the slider that the IO4-Emulation mode reproduces.</span></li>
+      <li><a href="https://gitea.tendokyu.moe/Yttris/chuniio-rs" target="_blank" rel="noopener">chuniio-rs</a><span class="muted"> - the community driver for the Tasoller Plus: how the game talks to the device in WINUSB mode.</span></li>
+      <li><a href="https://gitea.tendokyu.moe/tasoller/host-aprom" target="_blank" rel="noopener">host-aprom</a><span class="muted"> - the firmware and documentation of the arcade I/O board (IO4) that the device imitates.</span></li>
+      <li><a href="https://gitea.tendokyu.moe/tasoller/tasoller-plus" target="_blank" rel="noopener">tasoller-plus</a><span class="muted"> - the reference code of the Tasoller Plus on its M482 chip.</span></li>
+      <li><a href="https://github.com/YttrisL/tasoller-plus-dump-and-restore" target="_blank" rel="noopener">tasoller-plus-dump-and-restore</a><span class="muted"> - the dump and restore tool that the Memory dump of the Toolkit follows.</span></li>
     </ul>
   </div>
 </section>
@@ -859,6 +899,20 @@
   </div>
   <pre class="log" id="log"></pre></details>
 </main>
+
+<footer class="site-footer">
+  <span>Made by Yttris</span>
+  <span class="sep" aria-hidden="true">|</span>
+  <span>2026</span>
+  <span class="sep" aria-hidden="true">|</span>
+  <span>Free to use and redistribute</span>
+  <span class="sep" aria-hidden="true">|</span>
+  <a href="https://github.com/YttrisL/tasoller-plus-web-tools" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Tasoller+ Toolkit</a>
+  <span class="sep" aria-hidden="true">|</span>
+  <a href="https://github.com/YttrisL/tasoller-plus-custom-firmware" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Supernova</a>
+  <span class="sep" aria-hidden="true">|</span>
+  <a id="footDownload" href="#" title="Download this page to keep a copy of it: it works without a network"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 20h14v-2H5v2zM19 9h-4V3H9v6H5l7 7 7-7z"/></svg>Download a copy of the Toolkit</a>
+</footer>
 
 <div id="toasts" aria-live="polite"></div>
 
@@ -1976,6 +2030,9 @@ async function selfTest() {
 
 <script id="app">
 "use strict";
+// The page as it was loaded, before the script changes anything: what the Download link of the footer saves when the page cannot be fetched again
+// (a page opened from a file, which the browser does not let it read).
+const PAGE_SOURCE = "<!doctype html>\n" + document.documentElement.outerHTML.replace(/^<html([^>]*?) data-theme="[a-z]*"/, "<html$1");
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -2019,8 +2076,11 @@ const hid = () => ("hid" in navigator) ? navigator.hid : null;
 // pages
 // ------------------------------------------------------------------------------------------------
 function showPage(name) {
-  if (!["test", "led", "config", "flasher", "dump", "io4cfg", "links"].includes(name) || ((name === "dump" || name === "io4cfg") && !dumpAvailable())) name = "test";      // the Supernova pages need Supernova
+  if (!app.conn && name !== "links") name = "home";                  // with no device only the Useful links are there, and the welcome page ("home")
+  if (!["test", "led", "config", "flasher", "dump", "io4cfg", "links"].includes(name) && !(name === "home" && !app.conn) || ((name === "dump" || name === "io4cfg") && !dumpAvailable())) name = "test";      // the Supernova pages need Supernova
+  if (document.body.classList.contains("update-mode") && name !== "flasher" && name !== "links") name = "flasher";      // update mode: the Flasher and the links only
   app.page = name;
+  document.body.classList.toggle("on-links", name === "links");
   document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + name));
   document.querySelectorAll(".tab").forEach(t => { if (t.dataset.page === name) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current"); });
   try { history.replaceState(null, "", "#" + name); } catch (e) {}
@@ -2242,8 +2302,12 @@ function onDeviceGone(dev) {
 function setConnUI(state) {
   const c = app.conn, dot = $("connDot"), txt = $("connText");
   $("connHelp").hidden = !!(c && state !== "off");
-  dot.className = "dot"; $("connOfficial").hidden = true; $("connCfw").hidden = true; dot.hidden = false;
+  dot.className = "dot"; $("connOfficial").hidden = true; $("connCfw").hidden = true; $("connUpdate").hidden = true; dot.hidden = false;
   document.body.classList.toggle("cfw", !!(c && state !== "off" && c.cfw));
+  const updating = !!(c && state !== "off" && c.update);
+  document.body.classList.toggle("update-mode", updating);
+  $("flashUpdateNote").hidden = !updating;
+  if (updating && app.page !== "flasher" && app.page !== "links") showPage("flasher");        // in update mode the device only offers the Flasher
   document.body.classList.toggle("fw-official", !!(c && state !== "off" && c.version === OFFICIAL_VERSION && !c.demo));
   if (state === "off" || !c) {
     txt.textContent = "Not connected"; $("connInfo").disabled = true; $("connPop").hidden = true; $("btnConnect").hidden = false; $("btnDisconnect").hidden = true;
@@ -2254,11 +2318,12 @@ function setConnUI(state) {
   const name = c.demo ? "Simulated Tasoller Plus" : (c.cmdDev.productName || "Tasoller Plus") + " (" + hexId(c.cmdDev) + ")";
   if (state === "busy") { txt.textContent = "Connecting to " + name + "..."; dot.classList.add("warn"); $("connInfo").disabled = true; return; }
   dot.classList.add(c.demo ? "demo" : "on");
-  if (c.version === OFFICIAL_VERSION && !c.demo) { dot.hidden = true; $("connOfficial").hidden = false; }
+  if (c.update) { dot.hidden = true; $("connUpdate").hidden = false; }                       // update mode: a yellow badge instead of the name of the device
+  else if (c.version === OFFICIAL_VERSION && !c.demo) { dot.hidden = true; $("connOfficial").hidden = false; }
   else if (c.cfw) { dot.hidden = true; $("connCfw").hidden = false; }
   const mode = c.update ? "update mode" : (c.mode != null ? MODE_NAMES[c.mode] : "");
   const shortName = c.demo ? "Demo (simulated)" : (c.cmdDev.productName || "Tasoller Plus");
-  txt.textContent = shortName; $("connInfo").disabled = false;
+  txt.textContent = c.update ? "" : shortName; $("connInfo").disabled = false;
   const official = c.version === OFFICIAL_VERSION && !c.demo;
   const inf = c.info || {}, none = "-";
   const rows = [["Main hardware version:", inf.hwMain || none], ["Main firmware version:", c.version || none], ["Touch hardware version:", inf.hwTouch || none], ["Touch firmware version:", inf.touchFw || none]];
@@ -2286,7 +2351,7 @@ function updateButtons() {
   ["btnHideDiff", "btnHideThr"].forEach(id => { $(id).disabled = upd; });
   $("advClose").disabled = upd;
   if (upd) { $("btnMode").disabled = true; $("advPanel").hidden = true; }
-  $("ledUpdateNote").hidden = !upd; $("ledConnect").disabled = upd; $("ledOff").disabled = upd;
+  $("flashUpdateNote").hidden = !upd; $("ledUpdateNote").hidden = !upd; $("ledConnect").disabled = upd; $("ledOff").disabled = upd;
   if (upd && led.timer) ledStop();
   ["sliderAll", "numAll", "sliderMode", "sliderBR", "sliderDelay", "numDelay", "sliderGround", "sliderAir", "btnRestore", "btnAdvanced",
     "btnSetExport", "btnSetImport", "dbgFinger", "dbgFingerApply", "dbgBaseline", "dbgNoise", "dbgIir", "dbgReset", "keyRestore"].forEach(id => { $(id).disabled = !cfgOn; });
@@ -3704,6 +3769,8 @@ function gateNeeded() {
 function updateGate() {
   const c = app.conn, on = gateNeeded(), io4 = isIo4();
   document.body.classList.toggle("gate", on);
+  document.body.classList.toggle("nodevice", !c);
+  if (!c && app.page !== "links" && app.page !== "home") showPage("home");
   const checking = !!(c && on && !c.probed);                // what the browser allowed earlier is still being looked for: no request until it is known
   $("welcomeOff").hidden = !!c; $("welcomeChecking").hidden = !checking; $("welcomeSetup").hidden = !c || checking;
   $("welcomeHint").textContent = hid() ? "" : "This browser has no WebHID. Use a recent Chrome or Edge on desktop.";
@@ -3807,6 +3874,15 @@ if (hid()) {
 app.hideDiff = load("hideDiff") === "1"; app.hideThr = load("hideThr") === "1"; applyView();
 selfTest().then(() => { $("stSelf").textContent = "passed"; $("stSelf").className = "ok"; },
   e => { $("stSelf").textContent = "FAILED"; $("stSelf").className = "bad"; log("self-test failed: " + e.message); toast("Self-test failed: " + e.message, "bad"); });
+// Download: a copy of the page. A page served over the web is fetched again as it is; one opened from a file cannot be, so the page as it was loaded is saved.
+$("footDownload").onclick = async e => {
+  e.preventDefault();
+  let source = null;
+  if (/^https?:$/.test(location.protocol)) {
+    try { const r = await fetch(location.href.split("#")[0], { cache: "no-cache" }); if (r.ok) source = await r.text(); } catch (err) {}
+  }
+  saveBlob("index.html", new Blob([source !== null ? source : PAGE_SOURCE], { type: "text/html" }));
+};
 setConnUI("off");
 showPage((location.hash || "#test").slice(1));
 buildGrid(0); renderConfig(); updateButtons(); updateStream();

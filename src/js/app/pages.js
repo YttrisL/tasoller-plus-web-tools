@@ -2,8 +2,11 @@
 // pages
 // ------------------------------------------------------------------------------------------------
 function showPage(name) {
-  if (!["test", "led", "config", "flasher", "dump", "io4cfg", "links"].includes(name) || ((name === "dump" || name === "io4cfg") && !dumpAvailable())) name = "test";      // the Supernova pages need Supernova
+  if (!app.conn && name !== "links") name = "home";                  // with no device only the Useful links are there, and the welcome page ("home")
+  if (!["test", "led", "config", "flasher", "dump", "io4cfg", "links"].includes(name) && !(name === "home" && !app.conn) || ((name === "dump" || name === "io4cfg") && !dumpAvailable())) name = "test";      // the Supernova pages need Supernova
+  if (document.body.classList.contains("update-mode") && name !== "flasher" && name !== "links") name = "flasher";      // update mode: the Flasher and the links only
   app.page = name;
+  document.body.classList.toggle("on-links", name === "links");
   document.querySelectorAll(".page").forEach(p => p.classList.toggle("active", p.id === "page-" + name));
   document.querySelectorAll(".tab").forEach(t => { if (t.dataset.page === name) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current"); });
   try { history.replaceState(null, "", "#" + name); } catch (e) {}

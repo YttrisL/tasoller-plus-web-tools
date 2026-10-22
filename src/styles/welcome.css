@@ -2,6 +2,15 @@
   body.gate .tabs { display:none; }
   body.gate .page.active { display:none; }
   body.gate #page-welcome { display:block; }
+  /* A device in update mode only offers the Flasher: the other tabs are not there */
+  body.update-mode .tab:not([data-page="flasher"]):not([data-page="links"]) { display:none !important; }
+  /* With no device only the Home and Useful links tabs are there, and the Useful links page can be shown */
+  .tab.home-only { display:none; }
+  body.nodevice .tab.home-only { display:inline-block; }
+  body.gate.nodevice .tabs { display:flex; }
+  body.gate.nodevice .tab:not([data-page="links"]):not([data-page="home"]) { display:none; }
+  body.gate.nodevice .page#page-links.active { display:block; }
+  body.gate.nodevice.on-links #page-welcome { display:none; }
   .welcome { max-width:640px; margin:8vh auto 0; text-align:center; }
   .welcome-brand { font-size:22px; font-weight:700; letter-spacing:.06em; margin-bottom:28px; }
   .welcome-brand b { color:var(--accent); }
@@ -9,6 +18,8 @@
   .welcome h1 { font-size:20px; margin:0 0 14px; }
   .welcome p { color:var(--muted); margin:0 0 20px; }
   .welcome .btn { padding:9px 26px; }
+  .welcome p.welcome-tip { font-size:14px; color:var(--fg); margin:34px auto 0; max-width:520px; padding:10px 14px; background:var(--panel); border:1px solid var(--line2); border-left:3px solid var(--btn); border-radius:6px; text-align:left; }
+  .welcome-tip b { color:var(--btn); }
   #welcomeSetup { text-align:left; border:1px solid var(--line2); border-radius:8px; padding:18px 22px; background:var(--panel); }
   #welcomeSetup.io4 { border-color:var(--cfw); }
   #welcomeSetup h1 { text-align:center; }

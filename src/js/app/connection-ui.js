@@ -4,8 +4,12 @@
 function setConnUI(state) {
   const c = app.conn, dot = $("connDot"), txt = $("connText");
   $("connHelp").hidden = !!(c && state !== "off");
-  dot.className = "dot"; $("connOfficial").hidden = true; $("connCfw").hidden = true; dot.hidden = false;
+  dot.className = "dot"; $("connOfficial").hidden = true; $("connCfw").hidden = true; $("connUpdate").hidden = true; dot.hidden = false;
   document.body.classList.toggle("cfw", !!(c && state !== "off" && c.cfw));
+  const updating = !!(c && state !== "off" && c.update);
+  document.body.classList.toggle("update-mode", updating);
+  $("flashUpdateNote").hidden = !updating;
+  if (updating && app.page !== "flasher" && app.page !== "links") showPage("flasher");        // in update mode the device only offers the Flasher
   document.body.classList.toggle("fw-official", !!(c && state !== "off" && c.version === OFFICIAL_VERSION && !c.demo));
   if (state === "off" || !c) {
     txt.textContent = "Not connected"; $("connInfo").disabled = true; $("connPop").hidden = true; $("btnConnect").hidden = false; $("btnDisconnect").hidden = true;
@@ -16,11 +20,12 @@ function setConnUI(state) {
   const name = c.demo ? "Simulated Tasoller Plus" : (c.cmdDev.productName || "Tasoller Plus") + " (" + hexId(c.cmdDev) + ")";
   if (state === "busy") { txt.textContent = "Connecting to " + name + "..."; dot.classList.add("warn"); $("connInfo").disabled = true; return; }
   dot.classList.add(c.demo ? "demo" : "on");
-  if (c.version === OFFICIAL_VERSION && !c.demo) { dot.hidden = true; $("connOfficial").hidden = false; }
+  if (c.update) { dot.hidden = true; $("connUpdate").hidden = false; }                       // update mode: a yellow badge instead of the name of the device
+  else if (c.version === OFFICIAL_VERSION && !c.demo) { dot.hidden = true; $("connOfficial").hidden = false; }
   else if (c.cfw) { dot.hidden = true; $("connCfw").hidden = false; }
   const mode = c.update ? "update mode" : (c.mode != null ? MODE_NAMES[c.mode] : "");
   const shortName = c.demo ? "Demo (simulated)" : (c.cmdDev.productName || "Tasoller Plus");
-  txt.textContent = shortName; $("connInfo").disabled = false;
+  txt.textContent = c.update ? "" : shortName; $("connInfo").disabled = false;
   const official = c.version === OFFICIAL_VERSION && !c.demo;
   const inf = c.info || {}, none = "-";
   const rows = [["Main hardware version:", inf.hwMain || none], ["Main firmware version:", c.version || none], ["Touch hardware version:", inf.hwTouch || none], ["Touch firmware version:", inf.touchFw || none]];
@@ -48,7 +53,7 @@ function updateButtons() {
   ["btnHideDiff", "btnHideThr"].forEach(id => { $(id).disabled = upd; });
   $("advClose").disabled = upd;
   if (upd) { $("btnMode").disabled = true; $("advPanel").hidden = true; }
-  $("ledUpdateNote").hidden = !upd; $("ledConnect").disabled = upd; $("ledOff").disabled = upd;
+  $("flashUpdateNote").hidden = !upd; $("ledUpdateNote").hidden = !upd; $("ledConnect").disabled = upd; $("ledOff").disabled = upd;
   if (upd && led.timer) ledStop();
   ["sliderAll", "numAll", "sliderMode", "sliderBR", "sliderDelay", "numDelay", "sliderGround", "sliderAir", "btnRestore", "btnAdvanced",
     "btnSetExport", "btnSetImport", "dbgFinger", "dbgFingerApply", "dbgBaseline", "dbgNoise", "dbgIir", "dbgReset", "keyRestore"].forEach(id => { $(id).disabled = !cfgOn; });

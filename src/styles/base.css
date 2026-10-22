@@ -24,7 +24,7 @@
   }
   * { box-sizing:border-box; }
   html, body { margin:0; }
-  body { font:14px/1.45 system-ui, "Segoe UI", sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; }
+  body { font:14px/1.45 system-ui, "Segoe UI", sans-serif; background:var(--bg); color:var(--fg); min-height:100vh; display:flex; flex-direction:column; }
   button, input, select { font:inherit; color:inherit; }
   [hidden] { display:none !important; }
 

@@ -21,6 +21,8 @@ function gateNeeded() {
 function updateGate() {
   const c = app.conn, on = gateNeeded(), io4 = isIo4();
   document.body.classList.toggle("gate", on);
+  document.body.classList.toggle("nodevice", !c);
+  if (!c && app.page !== "links" && app.page !== "home") showPage("home");
   const checking = !!(c && on && !c.probed);                // what the browser allowed earlier is still being looked for: no request until it is known
   $("welcomeOff").hidden = !!c; $("welcomeChecking").hidden = !checking; $("welcomeSetup").hidden = !c || checking;
   $("welcomeHint").textContent = hid() ? "" : "This browser has no WebHID. Use a recent Chrome or Edge on desktop.";

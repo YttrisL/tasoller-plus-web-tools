@@ -1,4 +1,7 @@
 "use strict";
+// The page as it was loaded, before the script changes anything: what the Download link of the footer saves when the page cannot be fetched again
+// (a page opened from a file, which the browser does not let it read).
+const PAGE_SOURCE = "<!doctype html>\n" + document.documentElement.outerHTML.replace(/^<html([^>]*?) data-theme="[a-z]*"/, "<html$1");
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));

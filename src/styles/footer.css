@@ -1,0 +1,7 @@
+  /* The slim footer of every page */
+  .site-footer { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:4px 10px; padding:6px 16px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; }
+  .site-footer .sep { color:var(--line2); }
+  .site-footer a { display:inline-flex; align-items:center; gap:5px; color:var(--muted); text-decoration:none; }
+  .site-footer a:hover { color:var(--fg); }
+  .site-footer svg { width:14px; height:14px; }
+  .site-footer a#footDownload { border-bottom:1px solid currentColor; }          /* the link and its icon are underlined */
