@@ -10,6 +10,7 @@
 // ------------------------------------------------------------------------------------------------
 const KNOWN_PACKAGES = [
   { sha256: "e48e9fc929a9b4701f7492dbcc33fcedcd59800a7d7421fb013e3a8beb48e8ba", name: "TSLP_Main_APP_050_20250102.skystar", official: true },
+  { sha256: "a5114a5d66f7f0b9bbee87c404edb4e80b400f16ee337c0becc13604d8dc7635", name: "SS321_CFW_SNV_20261024.skystar", official: false, supernova: true },
   { sha256: "fa09a0f70acee437409259cc90f343bfb54d6af50f22ac8d1537657e8c815d80", name: "SS321_CFW_SNV_20261022.skystar", official: false, supernova: true },
   { sha256: "b6c26f85686b2c0eb663ff35b25f98568326e0c79cf5b00442e1eb08b67ccc25", name: "SS321_CFW_SNV_20261022.skystar", official: false, supernova: true },
   { sha256: "10464fbf15261a1073a393462563656f5226e2ebf0432e92a4feb7d6eba37ec4", name: "SS321_CFW_SNV_20261022.skystar", official: false, supernova: true },
